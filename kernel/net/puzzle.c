@@ -14,7 +14,6 @@
 static const u32 NOT_FOUND = 500;
 
 LIST_HEAD(policy_head);
-LIST_HEAD(cache_head);
 
 static u8 puzzle_type = PZLTYPE_NONE;
 static bool addlock = false;
@@ -109,21 +108,6 @@ bool find_puzzle_policy(u32 ip, struct puzzle_policy** ptr) {
 }
 EXPORT_SYMBOL(find_puzzle_policy);
 
-bool find_puzzle_cache(u32 ip, struct puzzle_cache** ptr) {
-    struct puzzle_cache* cache;
-    struct list_head* head;
-    list_for_each(head, &cache_head) {
-        cache = list_entry(head, struct puzzle_cache, list);
-        if(ip == cache->ip) {
-            *ptr = cache;
-            return true;
-        }
-    }
-
-    return false;
-}
-EXPORT_SYMBOL(find_puzzle_cache);
-
 static u32 update_to_new_seed(struct puzzle_policy* policy, u32 new_seed) {
     policy->seed_old = policy->seed;
     policy->seed = new_seed;
@@ -204,57 +188,6 @@ EXPORT_SYMBOL(do_check_puzzle);
 SYSCALL_DEFINE4(check_puzzle, __u8, type, __u32, puzzle, __u32, nonce, __u32, policy_ip)
 {
     return do_check_puzzle(type, puzzle, nonce, policy_ip);
-}
-
-int do_set_puzzle_cache(u32 ip, u8 type, u32 puzzle, u32 threshold) {
-    struct puzzle_cache* cache;
-    int updated = 0;
-
-    if(unlikely(!find_puzzle_cache(ip, &cache))) {
-        if(type == PZLTYPE_NONE)
-            return 0;
-
-        cache = kmalloc(sizeof(*cache), GFP_KERNEL);
-        memset(cache, 0, sizeof(*cache));
-
-        cache->ip = ip;
-        cache->puzzle_type = type;
-        cache->puzzle = puzzle;
-        cache->threshold = threshold;
-
-        list_add_tail(&(cache->list), &cache_head);
-        return 4;
-    }
-
-    if(type) {
-        if(type == PZLTYPE_NONE) {
-            list_del(&(cache->list));
-            kfree(cache);
-
-            return 4;
-        }
-	if(type != cache->puzzle_type)
-		cache->puzzle = 0;
-        cache->puzzle_type = type;
-    }
-
-    if(puzzle && cache->puzzle != puzzle) {
-        updated ++;
-        cache->puzzle = puzzle;
-    }
-    if(threshold && cache->threshold != threshold) {
-        updated ++;
-        cache->threshold = threshold;
-    }
-
-    return updated;
-}
-
-EXPORT_SYMBOL(do_set_puzzle_cache);
-
-SYSCALL_DEFINE3(set_puzzle_cache, __u32, ip, __u32, puzzle, __u32, threshold)
-{
-    return do_set_puzzle_cache(ip, puzzle_type, puzzle, threshold);
 }
 
 u32 do_get_threshold(u32 ip) {
