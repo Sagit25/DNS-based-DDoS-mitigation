@@ -39,7 +39,6 @@
 
 #include <net/tcp.h>
 #include <net/mptcp.h>
-#include <net/puzzle.h>
 
 #include <linux/compiler.h>
 #include <linux/gfp.h>
@@ -439,17 +438,6 @@ struct tcp_out_options {
 	u8 bpf_opt_len;		/* length of BPF hdr option */
 	__u8 *hash_location;	/* temporary pointer, overloaded */
 	__u32 tsval, tsecr;	/* need to include OPTION_TS */
-
-	/* Modified by YSH */
-
-	__u8 puzzle_type;
-	__u32 puzzle;
-	__u32 nonce;
-	__u32 dns_ip;
-	__u32 threshold;
-
-	/* Modified by YSH */
-
 	struct tcp_fastopen_cookie *fastopen_cookie;	/* Fast open cookie */
 	struct mptcp_out_options mptcp;
 };
@@ -711,30 +699,6 @@ static void tcp_options_write(struct tcphdr *th, struct tcp_sock *tp,
 		ptr += (len + 3) >> 2;
 	}
 
-	/* Modified by YSH */
-
-	if (unlikely(opts->puzzle_type)) {
-		*ptr++ = htonl((TCPOPT_NOP << 24) | (TCPOPT_PZL_TYPE << 16) | (TCPOLEN_PZL_TYPE << 8) | opts->puzzle_type);
-	}
-	if (unlikely(opts->puzzle)) {
-		*ptr++ = htonl((TCPOPT_NOP << 24) | (TCPOPT_NOP << 16) | (TCPOPT_PUZZLE << 8) | TCPOLEN_PUZZLE);
-		*ptr++ = htonl(opts->puzzle);
-	}
-	if (unlikely(opts->nonce)) {
-		*ptr++ = htonl((TCPOPT_NOP << 24) | (TCPOPT_NOP << 16) | (TCPOPT_NONCE << 8) | TCPOLEN_NONCE);
-		*ptr++ = htonl(opts->nonce);
-	}
-	if (unlikely(opts->dns_ip)) {
-		*ptr++ = htonl((TCPOPT_NOP << 24) | (TCPOPT_NOP << 16) | (TCPOPT_DNS_IP << 8) | TCPOLEN_DNS_IP);
-		*ptr++ = htonl(opts->dns_ip);
-	}
-	if (unlikely(opts->threshold)) {
-		*ptr++ = htonl((TCPOPT_NOP << 24) | (TCPOPT_NOP << 16) | (TCPOPT_THRESHOLD << 8) | TCPOLEN_THRESHOLD);
-		*ptr++ = htonl(opts->threshold);
-	}
-
-	/* Modified by YSH */
-
 	smc_options_write(ptr, &options);
 
 	mptcp_options_write(th, ptr, tp, opts);
@@ -869,23 +833,6 @@ static unsigned int tcp_syn_options(struct sock *sk, struct sk_buff *skb,
 
 	bpf_skops_hdr_opt_len(sk, skb, NULL, NULL, 0, opts, &remaining);
 
-	/* Modified by YSH */
-
-	printk(KERN_ALERT "ramaining = %d", remaining);
-
-	if(get_puzzle_type() != PZLTYPE_NONE) {
-		struct puzzle_cache* cache;
-		if(find_puzzle_cache(tcp_hdr(skb)->source, &cache)) {
-			opts->puzzle = cache->puzzle;
-			opts->nonce = do_solve_puzzle(cache->threshold, cache->puzzle, opts->dns_ip, 0, cache->puzzle_type);
-			opts->threshold = cache->threshold;
-			remaining -= 6;
-			printk(KERN_ALERT "puzzle = %u, nonce= %u",opts->puzzle, opts->nonce);
-		}
-	}
-
-	/* Modified by YSH */
-	
 	return MAX_TCP_OPTION_SPACE - remaining;
 }
 
@@ -929,7 +876,7 @@ static unsigned int tcp_synack_options(const struct sock *sk,
 	if (likely(ireq->tstamp_ok)) {
 		opts->options |= OPTION_TS;
 		opts->tsval = tcp_skb_timestamp(skb) + tcp_rsk(req)->ts_off;
-		opts->tsecr = req->ts_recent;
+		opts->tsecr = READ_ONCE(req->ts_recent);
 		remaining -= TCPOLEN_TSTAMP_ALIGNED;
 	}
 	if (likely(ireq->sack_ok)) {
@@ -1298,7 +1245,6 @@ static int __tcp_transmit_skb(struct sock *sk, struct sk_buff *skb,
 	unsigned int tcp_options_size, tcp_header_size;
 	struct sk_buff *oskb = NULL;
 	struct tcp_md5sig_key *md5;
-	struct iphdr *ih = ip_hdr(skb);
 	struct tcphdr *th;
 	u64 prior_wstamp;
 	int err;
@@ -1385,8 +1331,6 @@ static int __tcp_transmit_skb(struct sock *sk, struct sk_buff *skb,
 
 	th->check		= 0;
 	th->urg_ptr		= 0;
-
-	printk("transmition %u(%u) -> %u(%u)",ntohs(th->source), ntohs(tcp_hdr(skb)->dest), ntohs(th->dest), ntohs(tcp_hdr(skb)->source));
 
 	/* The urg_mode check is necessary during a below snd_una win probe */
 	if (unlikely(tcp_urg_mode(tp) && before(tcb->seq, tp->snd_up))) {
@@ -3637,7 +3581,7 @@ struct sk_buff *tcp_make_synack(const struct sock *sk, struct dst_entry *dst,
 	rcu_read_lock();
 	md5 = tcp_rsk(req)->af_specific->req_md5_lookup(sk, req_to_sk(req));
 #endif
-	skb_set_hash(skb, tcp_rsk(req)->txhash, PKT_HASH_TYPE_L4);
+	skb_set_hash(skb, READ_ONCE(tcp_rsk(req)->txhash), PKT_HASH_TYPE_L4);
 	/* bpf program will be interested in the tcp_flags */
 	TCP_SKB_CB(skb)->tcp_flags = TCPHDR_SYN | TCPHDR_ACK;
 	tcp_header_size = tcp_synack_options(sk, req, mss, skb, &opts, md5,
@@ -4180,7 +4124,7 @@ int tcp_rtx_synack(const struct sock *sk, struct request_sock *req)
 
 	/* Paired with WRITE_ONCE() in sock_setsockopt() */
 	if (READ_ONCE(sk->sk_txrehash) == SOCK_TXREHASH_ENABLED)
-		tcp_rsk(req)->txhash = net_tx_rndhash();
+		WRITE_ONCE(tcp_rsk(req)->txhash, net_tx_rndhash());
 	res = af_ops->send_synack(sk, NULL, &fl, req, NULL, TCP_SYNACK_NORMAL,
 				  NULL);
 	if (!res) {

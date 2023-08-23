@@ -80,7 +80,6 @@
 #include <linux/jump_label_ratelimit.h>
 #include <net/busy_poll.h>
 #include <net/mptcp.h>
-#include <net/puzzle.h>
 
 int sysctl_tcp_max_orphans __read_mostly = NR_FILE;
 
@@ -3591,8 +3590,11 @@ static int tcp_ack_update_window(struct sock *sk, const struct sk_buff *skb, u32
 static bool __tcp_oow_rate_limited(struct net *net, int mib_idx,
 				   u32 *last_oow_ack_time)
 {
-	if (*last_oow_ack_time) {
-		s32 elapsed = (s32)(tcp_jiffies32 - *last_oow_ack_time);
+	/* Paired with the WRITE_ONCE() in this function. */
+	u32 val = READ_ONCE(*last_oow_ack_time);
+
+	if (val) {
+		s32 elapsed = (s32)(tcp_jiffies32 - val);
 
 		if (0 <= elapsed &&
 		    elapsed < READ_ONCE(net->ipv4.sysctl_tcp_invalid_ratelimit)) {
@@ -3601,7 +3603,10 @@ static bool __tcp_oow_rate_limited(struct net *net, int mib_idx,
 		}
 	}
 
-	*last_oow_ack_time = tcp_jiffies32;
+	/* Paired with the prior READ_ONCE() and with itself,
+	 * as we might be lockless.
+	 */
+	WRITE_ONCE(*last_oow_ack_time, tcp_jiffies32);
 
 	return false;	/* not rate-limited: go ahead, send dupack now! */
 }
@@ -4147,31 +4152,6 @@ void tcp_parse_options(const struct net *net,
 				opt_rx->saw_unknown = 1;
 				break;
 
-			/* Modified by YSH */
-
-			case TCPOPT_PZL_TYPE:
-				if(opsize == TCPOLEN_PZL_TYPE)
-					opt_rx->puzzle_type = *ptr;
-				break;
-			case TCPOPT_PUZZLE:
-				if(opsize == TCPOLEN_PUZZLE)
-					opt_rx->puzzle = get_unaligned_be32(ptr); 
-				break;
-			case TCPOPT_NONCE:
-				if(opsize == TCPOLEN_NONCE)
-					opt_rx->nonce = get_unaligned_be32(ptr);
-				break;
-			case TCPOPT_DNS_IP:
-				if(opsize == TCPOLEN_DNS_IP)
-					opt_rx->dns_ip = get_unaligned_be32(ptr);
-				break;
-			case TCPOPT_THRESHOLD:
-				if(opsize == TCPOLEN_THRESHOLD)
-					opt_rx->threshold = get_unaligned_be32(ptr);
-				break;
-
-			/* Modified by YSH */
-
 			default:
 				opt_rx->saw_unknown = 1;
 			}
@@ -4555,7 +4535,7 @@ static void tcp_sack_maybe_coalesce(struct tcp_sock *tp)
 	}
 }
 
-static void tcp_sack_compress_send_ack(struct sock *sk)
+void tcp_sack_compress_send_ack(struct sock *sk)
 {
 	struct tcp_sock *tp = tcp_sk(sk);
 
@@ -5833,35 +5813,6 @@ reset:
 	return false;
 }
 
-/* Modified by YSH */
-
-static int tcp_check_puzzle_for_syn_packet(struct sock *sk, struct sk_buff *skb,
-					 const struct tcphdr *th)
-{
-	struct tcp_sock *tp = tcp_sk(sk);
-	struct tcp_fastopen_cookie foc = { .len = -1 };
-	struct iphdr * ih = ip_hdr(skb); 
-	u32 policy_ip;
-
-	tcp_parse_options(sock_net(sk), skb, &tp->rx_opt, 0, &foc);
-	switch(tp->rx_opt.puzzle_type) {
-	case PZLTYPE_ORG:
-		policy_ip = tp->rx_opt.dns_ip;
-		break;
-	default:
-		policy_ip = ih->saddr;
-	}
-
-	printk(KERN_INFO "check puzzle for %u.%u.%u.%u\n puzzle : %u, nonce : %u\n"
-                , (policy_ip       )%256
-                , (policy_ip  >>  8)%256
-                , (policy_ip  >> 16)%256
-                , (policy_ip  >> 24)%256, tp->rx_opt.puzzle, tp->rx_opt.nonce);
-	return check_puzzle(tp->rx_opt.puzzle_type, tp->rx_opt.puzzle, tp->rx_opt.nonce,th->source/* (ih->saddr)*/, 0, (policy_ip));
-}
-
-/* Modified by YSH */
-
 /*
  *	TCP receive function for the ESTABLISHED state.
  *
@@ -6226,21 +6177,13 @@ static int tcp_rcv_synsent_state_process(struct sock *sk, struct sk_buff *skb,
 	struct inet_connection_sock *icsk = inet_csk(sk);
 	struct tcp_sock *tp = tcp_sk(sk);
 	struct tcp_fastopen_cookie foc = { .len = -1 };
-	struct iphdr * ih = ip_hdr(skb);
 	int saved_clamp = tp->rx_opt.mss_clamp;
-	struct puzzle_cache* cache;
-	int puzzle_updated = 0;
 	bool fastopen_fail;
 	SKB_DR(reason);
 
 	tcp_parse_options(sock_net(sk), skb, &tp->rx_opt, 0, &foc);
 	if (tp->rx_opt.saw_tstamp && tp->rx_opt.rcv_tsecr)
 		tp->rx_opt.rcv_tsecr -= tp->tsoffset;
-
-	printk(KERN_INFO "log response \npuzzle_type: %u, threshold: %u, puzzle: %u\n"
-			,tp->rx_opt.puzzle_type, tp->rx_opt.threshold, tp->rx_opt.puzzle);
-
-	puzzle_updated = 0;//update_puzzle_cache(ih->daddr, tp->rx_opt.puzzle_type, tp->rx_opt.puzzle, tp->rx_opt.threshold);
 
 	if (th->ack) {
 		/* rfc793:
@@ -6279,7 +6222,6 @@ static int tcp_rcv_synsent_state_process(struct sock *sk, struct sk_buff *skb,
 
 		if (th->rst) {
 			tcp_reset(sk, skb);
-
 consume:
 			__kfree_skb(skb);
 			return 0;
@@ -6512,16 +6454,12 @@ int tcp_rcv_state_process(struct sock *sk, struct sk_buff *skb)
 	bool acceptable;
 	SKB_DR(reason);
 
-	printk(KERN_ALERT "rcv port s: %u, d: %u\n", ntohs(th->source), ntohs(th->dest));
-
 	switch (sk->sk_state) {
 	case TCP_CLOSE:
-		printk("closed");
 		SKB_DR_SET(reason, TCP_CLOSE);
 		goto discard;
 
 	case TCP_LISTEN:
-		printk("listen");
 		if (th->ack)
 			return 1;
 
@@ -6534,17 +6472,6 @@ int tcp_rcv_state_process(struct sock *sk, struct sk_buff *skb)
 				SKB_DR_SET(reason, TCP_FLAGS);
 				goto discard;
 			}
-
-			/* Modified by YSH */
-
-			if(tcp_check_puzzle_for_syn_packet(sk, skb, th)){
-				printk("puzzle failed\n");
-				return 1;
-			}
-			printk("puzzle_success\n");
-
-			/* Modified by YSH */
-
 			/* It is possible that we process SYN packets from backlog,
 			 * so we need to make sure to disable BH and RCU right there.
 			 */
@@ -6565,10 +6492,10 @@ int tcp_rcv_state_process(struct sock *sk, struct sk_buff *skb)
 	case TCP_SYN_SENT:
 		tp->rx_opt.saw_tstamp = 0;
 		tcp_mstamp_refresh(tp);
-		printk("syn_sent");
 		queued = tcp_rcv_synsent_state_process(sk, skb, th);
 		if (queued >= 0)
 			return queued;
+
 		/* Do step6 onward by hand. */
 		tcp_urg(sk, skb, th);
 		__kfree_skb(skb);

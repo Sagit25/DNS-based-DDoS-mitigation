@@ -886,44 +886,8 @@ __SYSCALL(__NR_futex_waitv, sys_futex_waitv)
 #define __NR_set_mempolicy_home_node 450
 __SYSCALL(__NR_set_mempolicy_home_node, sys_set_mempolicy_home_node)
 
-/* Modified by YSH */
-
-#define __NR_set_puzzle 451
-__SYSCALL(__NR_set_puzzle, sys_set_puzzle)
-#define __NR_solve_puzzle 452
-__SYSCALL(__NR_solve_puzzle, sys_solve_puzzle)
-#define __NR_get_threshold 453
-__SYSCALL(__NR_get_threshold, sys_get_threshold)
-#define __NR_set_threshold 454
-__SYSCALL(__NR_set_threshold, sys_set_threshold)
-#define __NR_get_puzzle_type 455
-__SYSCALL(__NR_get_puzzle_type, sys_get_puzzle_type)
-#define __NR_set_puzzle_type 456
-__SYSCALL(__NR_set_puzzle_type, sys_set_puzzle_type)
-#define __NR_get_local_dns 457
-__SYSCALL(__NR_get_local_dns, sys_get_local_dns)
-#define __NR_puzzle_set_dns 458
-__SYSCALL(__NR_set_local_dns, sys_set_local_dns)
-#define __NR_set_puzzle_cache 459
-__SYSCALL(__NR_set_puzzle_cache, sys_set_puzzle_cache)
-#define __NR_check_puzzle 460
-__SYSCALL(__NR_check_puzzle, sys_check_puzzle)
-
-
-
-#define __NR_puzzle_add_policy 454
-__SYSCALL(__NR_puzzle_add_policy, sys_puzzle_add_policy)
-
-
-
-
-
-
-
 #undef __NR_syscalls
-#define __NR_syscalls 464
-
-/* Modified by YSH */
+#define __NR_syscalls 451
 
 /*
  * 32 bit systems traditionally used different

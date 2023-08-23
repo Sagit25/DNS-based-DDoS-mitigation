@@ -124,17 +124,6 @@ struct tcp_options_received {
 		rcv_wscale : 4;	/* Window scaling to send to receiver	*/
 	u8	saw_unknown:1,	/* Received unknown option		*/
 		unused:7;
-
-	/* Modified by YSH */
-
-	u8  	puzzle_type;
-	u32 	puzzle;
-	u32 	nonce;
-	u32	dns_ip;
-	u32 	threshold;
-
-	/* Modified by YSH */
-	
 	u8	num_sacks;	/* Number of SACK blocks		*/
 	u16	user_mss;	/* mss requested by user in ioctl	*/
 	u16	mss_clamp;	/* Maximal mss, negotiated at connection setup */
@@ -521,7 +510,7 @@ static inline void fastopen_queue_tune(struct sock *sk, int backlog)
 	struct request_sock_queue *queue = &inet_csk(sk)->icsk_accept_queue;
 	int somaxconn = READ_ONCE(sock_net(sk)->core.sysctl_somaxconn);
 
-	queue->fastopenq.max_qlen = min_t(unsigned int, backlog, somaxconn);
+	WRITE_ONCE(queue->fastopenq.max_qlen, min_t(unsigned int, backlog, somaxconn));
 }
 
 static inline void tcp_move_syn(struct tcp_sock *tp,
