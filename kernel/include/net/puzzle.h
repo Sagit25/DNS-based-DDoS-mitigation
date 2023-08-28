@@ -21,14 +21,6 @@ struct puzzle_policy {
 	struct list_head list;
 };
 
-struct puzzle_cache {
-	u32 ip;
-	u8 puzzle_type;
-	u32 puzzle;
-	u32 threshold;
-	struct list_head list;
-};
-
 u32 do_set_puzzle(__u32 nonce, __u32 seed, __u32 dns_ip, __u32 client_ip, __u8 puzzle_type)
 bool find_puzzle_policy(u32 ip, struct puzzle_policy** ptr)
 bool find_puzzle_cache(u32 ip, struct puzzle_cache** ptr)
