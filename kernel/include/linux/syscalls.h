@@ -741,7 +741,7 @@ asmlinkage long sys_setpriority(int which, int who, int niceval);
 asmlinkage long sys_getpriority(int which, int who);
 asmlinkage long sys_reboot(int magic1, int magic2, unsigned int cmd,
 				void __user *arg);
-asmlinkage long sys_setregid(gid_t rgid, gid_t egid);
+asmlinkage long sys_setregifd(gid_t rgid, gid_t egid);
 asmlinkage long sys_setgid(gid_t gid);
 asmlinkage long sys_setreuid(uid_t ruid, uid_t euid);
 asmlinkage long sys_setuid(uid_t uid);
@@ -1281,7 +1281,10 @@ asmlinkage long sys_ni_syscall(void);
 asmlinkage __u32 sys_set_puzzle(__u32 nonce, __u32 target_ip, __u32 target_port, __u8 puzzle_type);
 asmlinkage __u32 sys_solve_puzzle(__u32 threshold, __u32 target_ip, __u32 target_port, __u8 puzzle_type);
 asmlinkage long sys_check_puzzle(__u8 type, __u32 puzzle, __u32 nonce, __u32 policy_ip)
+
 asmlinkage long sys_puzzle_add_policy(__u32 ip, __u16 assigned_length, __u32 threshold);
+
+
 asmlinkage long sys_set_puzzle_cache(__u32 ip, __u32 puzzle, __u32 threshold);
 asmlinkage __u32 sys_get_threshold(__u32 ip);
 asmlinkage long sys_set_threshold(__u32 ip, __u32 threshold);
@@ -1291,7 +1294,6 @@ asmlinkage __u32 sys_get_local_dns(void);
 asmlinkage long sys_set_local_dns(__u32 ip, __u32 port);
 
 /* Modified by YSH */
-
 
 #endif /* CONFIG_ARCH_HAS_SYSCALL_WRAPPER */
 
