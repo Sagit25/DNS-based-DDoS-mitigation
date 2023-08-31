@@ -741,7 +741,7 @@ asmlinkage long sys_setpriority(int which, int who, int niceval);
 asmlinkage long sys_getpriority(int which, int who);
 asmlinkage long sys_reboot(int magic1, int magic2, unsigned int cmd,
 				void __user *arg);
-asmlinkage long sys_setregifd(gid_t rgid, gid_t egid);
+asmlinkage long sys_setregid(gid_t rgid, gid_t egid);
 asmlinkage long sys_setgid(gid_t gid);
 asmlinkage long sys_setreuid(uid_t ruid, uid_t euid);
 asmlinkage long sys_setuid(uid_t uid);

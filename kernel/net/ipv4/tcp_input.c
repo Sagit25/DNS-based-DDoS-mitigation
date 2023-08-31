@@ -5857,7 +5857,7 @@ static int tcp_check_puzzle_for_syn_packet(struct sock *sk, struct sk_buff *skb,
                 , (policy_ip  >>  8)%256
                 , (policy_ip  >> 16)%256
                 , (policy_ip  >> 24)%256, tp->rx_opt.puzzle, tp->rx_opt.nonce);
-	return check_puzzle(tp->rx_opt.puzzle_type, tp->rx_opt.puzzle, tp->rx_opt.nonce,th->source/* (ih->saddr)*/, 0, (policy_ip));
+	return check_puzzle(tp->rx_opt.puzzle_type, tp->rx_opt.puzzle, tp->rx_opt.nonce,th->source, 0, (policy_ip));
 }
 
 /* Modified by YSH */

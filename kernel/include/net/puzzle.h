@@ -6,7 +6,7 @@
 #include <linux/list.h>
 
 #define PZLTYPE_NONE 1
-#define PZLTYPE_ORG 2
+#define PZLTYPE_EXT 2
 
 #define PZLTYPE_MAX 63
 
