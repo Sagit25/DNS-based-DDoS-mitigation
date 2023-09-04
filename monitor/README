@@ -1,0 +1,18 @@
++-------------------------------------+
+| DNS-based-DDoS-mitigation / monitor |
++-------------------------------------+
+
+        Monitoring part of DNS-based-DDoS-mitigation
+
+
+WHAT DOES THIS PART DO?
+
+This part of DNS-based-DDoS-mitigation monitors the TCP-SYN packets
+that are sent to the target server. It analyzes the packets and sets
+the hash puzzle difficulty level of each ISP.
+
+o  TCP-SYN packets are counted per ISP.
+o  Normal traffic per ISP is calculated.
+o  If a particular ISP is sending a lot of TCP-SYN packets,
+   the hash puzzle difficulty level for the ISP will be set to a
+   high value(which might lead to a lower threshold value).
