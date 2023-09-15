@@ -2,7 +2,7 @@
 TARGET = tcp_syn_capture
 
 # Source Files
-SOURCES = packet_capture.c
+SOURCES = packet_capture.c circular_buffer.c
 
 # Assembly files
 ASSEMBLYS = $(SOURCES:.c=.s)
@@ -11,7 +11,7 @@ ASSEMBLYS = $(SOURCES:.c=.s)
 OBJECTS = $(SOURCES:.c=.o)
 
 # Compiler
-CC = gcc
+CC = gcc-12
 
 # Compiler Flags
 CFLAGS = -Wall -O3

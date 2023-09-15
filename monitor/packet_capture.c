@@ -2,48 +2,7 @@
 #include <stdio.h>
 #include <netinet/ip.h>
 #include <netinet/tcp.h>
-#include <time.h>
-#include <stdbool.h>
-
-#define BUFSIZE 100000
-
-struct CircularBuffer{
-	struct timeval data[BUFSIZE];
-	int size;
-	int start;
-	int end;
-} buffer;
-
-void initBuffer(){
-	buffer.size = 0;
-	buffer.start = 0;
-	buffer.end = 0;
-}
-
-bool isEmpty(){
-	return buffer.size == 0;
-}
-
-bool isFull(){
-	return buffer.size == BUFSIZE;
-}
-
-void push(struct timeval timestamp){
-	if(isFull()){
-		buffer.start = (buffer.start + 1) % BUFSIZE;
-	}
-
-	buffer.data[buffer.end] = timestamp;
-	buffer.end = (buffer.end + 1) % BUFSIZE;
-	buffer.size++;
-}
-
-void pop(){
-	if(!isEmpty()){
-		buffer.start = (buffer.start + 1) % BUFSIZE;
-		buffer.size--;
-	}
-}
+#include "circular_buffer.h"
 
 void packet_handler(u_char *extra_user_data, const struct pcap_pkthdr *packet_header, const u_char *packet){
 	// ip header starting point by adding 
@@ -53,8 +12,8 @@ void packet_handler(u_char *extra_user_data, const struct pcap_pkthdr *packet_he
 	struct tcphdr *tcp_header = (struct tcphdr *)(packet + 14 + (ip_header->ip_hl << 2));
 
 	// clear buffer by removing old packets
-	while(!isEmpty() && packet_header->ts.tv_sec - buffer.data[buffer.start].tv_sec > 1){
-		pop();
+	while(!is_circular_buffer_empty() && packet_header->ts.tv_sec - get_circular_buffer_front().tv_sec > 1){
+		pop_circular_buffer();
 	}
 
 	// Only analyze TCP-SYN packets
@@ -64,11 +23,11 @@ void packet_handler(u_char *extra_user_data, const struct pcap_pkthdr *packet_he
 		char destination_ip[INET_ADDRSTRLEN];
 		inet_ntop(AF_INET, &(ip_header->ip_src), source_ip, INET_ADDRSTRLEN);
 		inet_ntop(AF_INET, &(ip_header->ip_dst), destination_ip, INET_ADDRSTRLEN);
-		push(packet_header->ts);
-		printf("\nSource IP: %s,\tDest IP: %s\n", source_ip, destination_ip);
+		push_circular_buffer(packet_header->ts);
+		printf("Source IP: %s,\tDest IP: %s\n", source_ip, destination_ip);
 	}
 
-	printf("\nTCP-SYN packet in the last second : %d\n", buffer.size);
+	printf("TCP-SYN packet in the last second : %d\n", get_circular_buffer_size());
 }
 
 int main(int argc, char *argv[]){
@@ -78,7 +37,7 @@ int main(int argc, char *argv[]){
 	pcap_if_t *alldevs;
 	pcap_if_t *d;
 	pcap_t *handle;
-	initBuffer();
+	init_circular_buffer();
 
 	ret = pcap_findalldevs(&alldevs, errbuf);
 	if(ret == -1){
