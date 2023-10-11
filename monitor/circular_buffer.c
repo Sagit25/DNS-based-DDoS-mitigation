@@ -2,52 +2,52 @@
 #include <stdbool.h>
 #include "circular_buffer.h"
 
-#define BUFFER_SIZE 10000
-
-struct circular_buffer {
-	struct timeval data[BUFFER_SIZE];
-	int start;
-	int end;
-	int size;
-};
-
 struct circular_buffer buffer;
 
 void init_circular_buffer() {
-	buffer.start = 0;
-	buffer.end = 0;
-	buffer.size = 0;
+	for(int i = 0; i < ISP_NUMBER; i++) {
+		buffer.isp_count[i] = 0;
+	}
+	buffer._start = 0;
+	buffer._end = 0;
+	buffer._size = 0;
 }
 
 bool is_circular_buffer_empty() {
-	return buffer.size == 0;
+	return buffer._size == 0;
 }
 
 bool is_circular_buffer_full() {
-	return buffer.size == BUFFER_SIZE;
+	return buffer._size == BUFFER_SIZE;
 }
 
-void push_circular_buffer(struct timeval ts) {
+void push_circular_buffer(struct packet_info pi) {
 	if(is_circular_buffer_full()) {
-		buffer.start = (buffer.start + 1) % BUFFER_SIZE;
+		buffer._start = (buffer._start + 1) % BUFFER_SIZE;
 	}
 
-	buffer.data[buffer.end] = ts;
-	buffer.end = (buffer.end + 1) % BUFFER_SIZE;
-	buffer.size++;
+	buffer._data[buffer._end] = pi;
+	buffer.isp_count[pi.isp_id]++;
+	buffer._end = (buffer._end + 1) % BUFFER_SIZE;
+	buffer._size++;
 }
 
 void pop_circular_buffer() {
 	if(!is_circular_buffer_empty()){
-		buffer.start = (buffer.start + 1) % BUFFER_SIZE;
-		buffer.size--;
+		buffer.isp_count[buffer._data[buffer._start].isp_id]--;
+		buffer._start = (buffer._start + 1) % BUFFER_SIZE;
+		buffer._size--;
 	}
 }
 
 int get_circular_buffer_size() {
-	return buffer.size;
+	return buffer._size;
 }
 
-struct timeval get_circular_buffer_front() {
-	return buffer.data[buffer.start];
+struct packet_info get_circular_buffer_front() {
+	return buffer._data[buffer._start];
+}
+
+int get_circular_buffer_isp_count(int isp_id) {
+	return buffer.isp_count[isp_id];
 }

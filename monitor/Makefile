@@ -1,8 +1,8 @@
 # Name of the output binary
-TARGET = tcp_syn_capture
+TARGET = tcp_syn_monitor
 
 # Source Files
-SOURCES = packet_capture.c circular_buffer.c
+SOURCES = main.c circular_buffer.c packet_handler.c
 
 # Assembly files
 ASSEMBLYS = $(SOURCES:.c=.s)
@@ -34,6 +34,9 @@ $(TARGET): $(SOURCES)
 	$(CC) $(CFLAGS) $(SOURCES) -o $(TARGET) $(LDFLAGS)
 
 # Only leave the binary
+bo:
+	rm -f $(ASSEMBLYS)
+	rm -f $(OBJECTS)
 binonly:
 	rm -f $(ASSEMBLYS)
 	rm -f $(OBJECTS)
