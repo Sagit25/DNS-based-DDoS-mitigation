@@ -17,13 +17,14 @@ int determine_isp(char *ip_address){
 void packet_handler(u_char *extra_user_data, const struct pcap_pkthdr *packet_header, const u_char *packet){
 	// ip header starting point by adding 
 	// 14 bytes(typical ethernet header length) to packet
+	cb_ptr buffer = (cb_ptr)extra_user_data;
 	struct ip *ip_header = (struct ip *)(packet + 14);
 	// tcp header starting point by adding offset of ip header length
 	struct tcphdr *tcp_header = (struct tcphdr *)(packet + 14 + (ip_header->ip_hl << 2));
 
 	// clear buffer by removing old packets
-	while(!is_circular_buffer_empty() && packet_header->ts.tv_sec - get_circular_buffer_front().ts.tv_sec > 1){
-		pop_circular_buffer();
+	while(!is_circular_buffer_empty(buffer) && packet_header->ts.tv_sec - get_circular_buffer_front(buffer).ts.tv_sec > 1){
+		pop_circular_buffer(buffer);
 	}
 
 	// Only analyze TCP-SYN packets
@@ -39,13 +40,13 @@ void packet_handler(u_char *extra_user_data, const struct pcap_pkthdr *packet_he
 		new_packet_info.ts = packet_header->ts;
 		new_packet_info.isp_id = packet_isp_id;
 
-		push_circular_buffer(new_packet_info);
+		push_circular_buffer(buffer, new_packet_info);
 		// printf("Source IP: %s,\tISP ID: %d,\tDest IP: %s\n", source_ip, packet_isp_id, destination_ip);
 	}
 
 	// printf("TCP-SYN packet in the last second : %d\n", get_circular_buffer_size());
 	for(int i = 0; i < ISP_NUMBER; i++){
-		printf("%d ", get_circular_buffer_isp_count(i));
+		printf("%d ", get_circular_buffer_isp_count(buffer, i));
 	}
-	printf("sum=%d\n", get_circular_buffer_size());
+	printf("sum=%d\n", get_circular_buffer_size(buffer));
 }

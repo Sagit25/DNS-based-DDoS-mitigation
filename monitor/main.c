@@ -1,37 +1,19 @@
-#include <pcap.h>
-#include <stdio.h>
-#include <netinet/ip.h>
-#include <netinet/tcp.h>
-#include "circular_buffer.h"
-#include "packet_handler.h"
+#include "tcp_syn_monitor.h"
 
-int main(int argc, char *argv[]){
-	int ret;
-	char *device;
-	char errbuf[PCAP_ERRBUF_SIZE];
-	pcap_if_t *alldevs;
-	pcap_if_t *d;
-	pcap_t *handle;
-	init_circular_buffer();
+int main(){
+	struct circular_buffer buffer;
+	init_circular_buffer(&buffer);
 
-	ret = pcap_findalldevs(&alldevs, errbuf);
-	if(ret == -1){
-		fprintf(stderr, "Error in pcap_findalldevs: %s\n", errbuf);
-		return 2;
-	} else if(alldevs == NULL){
-		fprintf(stderr, "No device found.\n");
-		return 2;
-	}
+	pcap_thread_data data;
+	init_pcap_thread_data(&data, &buffer, "eth0");
 
-	d = alldevs;
-	device = d->name;
-	handle = pcap_open_live(device, BUFSIZ, 1, 1000, errbuf);
-	if(handle == NULL){
-		fprintf(stderr, "Couldn't open device %s: %s\n", device, errbuf);
-		return 2;
-	}
+	start_pcap_thread(&data);
 
-	pcap_loop(handle , 0, packet_handler, NULL);
-	pcap_close(handle);
+	printf("pcap thread started\n");
+	printf("press any key to stop\n");
+	scanf("%c", NULL);
 
+	stop_pcap_thread(&data);
+
+	return 0;
 }
