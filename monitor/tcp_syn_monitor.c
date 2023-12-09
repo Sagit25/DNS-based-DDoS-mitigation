@@ -12,11 +12,25 @@ void* pcap_thread(void* arg){
 	return NULL;
 }
 
-void init_pcap_thread_data(pcap_thread_data *data, cb_ptr buffer, const char* device){
-	char errbuf[PCAP_ERRBUF_SIZE];
+int init_pcap_thread(pcap_thread_data *data, cb_ptr buffer){
+	int ret = pcap_findalldevs(&data->alldevs, data->errbuf);
+	if(ret == -1){
+		fprintf(stderr, "Error in pcap_findalldevs: %s\n", data->errbuf);
+		return -1;
+	} else if(data->alldevs == NULL){
+		fprintf(stderr, "No device found.\n");
+		return -1;
+	}
+	pcap_if_t *d = data->alldevs;
+	data->device = d->name;
 	data->buffer = buffer;
 	data->keep_running = true;
-	data->handle = pcap_open_live(device, BUFSIZ, 1, 1000, errbuf);
+	data->handle = pcap_open_live(data->device, BUFSIZ, 1, 1000, data->errbuf);
+	if(data->handle == NULL){
+		fprintf(stderr, "Error in pcap_open_live, device=%s: %s\n",data->device, data->errbuf);
+		return -1;
+	}
+	return 0;
 }
 
 void start_pcap_thread(pcap_thread_data *data){

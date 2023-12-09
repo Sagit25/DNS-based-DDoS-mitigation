@@ -2,7 +2,7 @@
 TARGET = tcp_syn_monitor
 
 # Source Files
-SOURCES = main.c circular_buffer.c packet_handler.c
+SOURCES = main.c tcp_syn_monitor.c circular_buffer.c packet_handler.c
 
 # Assembly files
 ASSEMBLYS = $(SOURCES:.c=.s)

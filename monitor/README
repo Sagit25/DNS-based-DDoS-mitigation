@@ -10,9 +10,74 @@ WHAT DOES THIS PART DO?
 This part of DNS-based-DDoS-mitigation monitors the TCP-SYN packets
 that are sent to the target server. It analyzes the packets and sets
 the hash puzzle difficulty level of each ISP.
+It provides the "tcp_syn_monitor.h" header file that can be used by
+monitoring server main program.
 
-o  TCP-SYN packets are counted per ISP.
-o  Normal traffic per ISP is calculated.
-o  If a particular ISP is sending a lot of TCP-SYN packets,
-   the hash puzzle difficulty level for the ISP will be set to a
-   high value(which might lead to a lower threshold value).
+
+WHAT IS TCP SYN MONITOR?
+
+TCP SYN Monitor is a library for monitoring TCP SYN packets in real-time.
+It uses the libpcap library to capture packets and analyzes them. It also
+uses multi-threading to process packets in real-time and allowing the main
+program to use the data.
+It provides the "tcp_syn_monitor.h" header file that can be included in the
+main program which has following features:
+
+o  Count the number of incoming TCP SYN packets per ISP per second.
+o  Count the number of total incoming TCP SYN packets per second.
+
+
+HOW TO USE TCP SYN MONITOR?
+
+1. Initialize the monitoring data structure.
+2. Start the monitoring thread with a circular buffer.
+3. The monitoring runs in a separate thread,
+	allowing your main application to run concurrently.
+4. Stop the monitoring thread and clean up resources when done.
+
+Sample code:
+```c
+#include "tcp_syn_monitor.h"
+
+int main() {
+    struct circular_buffer buffer;
+    init_circular_buffer(&buffer);
+
+    pcap_thread_data data;
+    init_pcap_thread_data(&data, &buffer);
+
+    start_pcap_thread(&data);
+
+    // Main application code
+
+    stop_pcap_thread(&data);
+
+    return 0;
+}
+```
+
+
+HOW TO CHECK THE MONITORING DATA?
+
+The monitoring data is stored in the circular buffer.
+Circular buffer is a FIFO queue that stores the TCP SYN packets
+that arrived within the last 1 second. By checking the size of the
+circular buffer, main program can get the total number of TCP SYN packets
+that arrived within the last 1 second. It also has a array of how many
+TCP SYN packets arrived from each ISP within the last 1 second.
+
+Sample code:
+```c
+#include "tcp_syn_monitor.h"
+
+int main(){
+	/* Initialize and start the monitoring */
+	...
+	int total_tcp_syn_packets = buffer->get_circular_buffer_size();
+	for(int i = 0; i < ISP_NUM; i++){
+		set_hash_puzzle_difficulty_level(i, buffer->get_isp_tcp_syn_packets(i));
+	}
+	...
+	/* Stop the monitoring and clean up resources */
+}
+```

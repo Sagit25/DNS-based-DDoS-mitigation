@@ -5,7 +5,7 @@ int main(){
 	init_circular_buffer(&buffer);
 
 	pcap_thread_data data;
-	init_pcap_thread_data(&data, &buffer, "eth0");
+	init_pcap_thread(&data, &buffer);
 
 	start_pcap_thread(&data);
 
