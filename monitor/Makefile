@@ -2,23 +2,24 @@
 TARGET = tcp_syn_monitor
 
 # Source Files
-SOURCES = main.c tcp_syn_monitor.c circular_buffer.c packet_handler.c
-
-# Assembly files
-ASSEMBLYS = $(SOURCES:.c=.s)
+SOURCES = src/main.c src/tcp_syn_monitor.c src/circular_buffer.c src/packet_handler.c
 
 # Object Files
 OBJECTS = $(SOURCES:.c=.o)
 
+# Assembly Files
+ASSEMBLYS = $(SOURCES:.c=.s)
+
 # Compiler
-CC = gcc-12
+CC = gcc
 
 # Compiler Flags
-CFLAGS = -Wall -O3
+CFLAGS = -Wall -O3 -Iinclude
 
 # Linker Flags
 LDFLAGS = -lpcap
 
+# Default target
 all: $(ASSEMBLYS) $(OBJECTS) $(TARGET)
 
 # Generate assembly files
@@ -30,13 +31,11 @@ all: $(ASSEMBLYS) $(OBJECTS) $(TARGET)
 	$(CC) $(CFLAGS) -c $< -o $@
 
 # Generate the binary
-$(TARGET): $(SOURCES)
-	$(CC) $(CFLAGS) $(SOURCES) -o $(TARGET) $(LDFLAGS)
+$(TARGET): $(OBJECTS)
+	$(CC) $(CFLAGS) $(OBJECTS) -o $(TARGET) $(LDFLAGS)
 
 # Only leave the binary
-bo:
-	rm -f $(ASSEMBLYS)
-	rm -f $(OBJECTS)
+bo: binonly
 binonly:
 	rm -f $(ASSEMBLYS)
 	rm -f $(OBJECTS)
@@ -46,3 +45,4 @@ clean:
 	rm -f $(ASSEMBLYS)
 	rm -f $(OBJECTS)
 	rm -f $(TARGET)
+
