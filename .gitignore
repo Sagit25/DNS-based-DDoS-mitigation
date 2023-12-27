@@ -1,2 +1,9 @@
-*.json
 .DS_Store
+CMakeLists.txt
+CMakeCache.txt
+CMakeFiles
+CMakeScripts
+Makefile
+cmake_install.cmake
+compile_commands.json
+install_manifest.txt
