@@ -8,7 +8,8 @@ int determine_isp(char *ip_address){
 	int sum = 0;
 	char* idx = ip_address;
 	while(*idx != '\0'){
-		sum += *idx - '0';
+		if(*idx >= '0' && *idx <= '9')
+			sum = sum + (sum * (*idx - '0')) + (*idx - '0');
 		idx++;
 	}
 	return sum%10; // dummy return value
@@ -45,8 +46,10 @@ void packet_handler(u_char *extra_user_data, const struct pcap_pkthdr *packet_he
 	}
 
 	// printf("TCP-SYN packet in the last second : %d\n", get_circular_buffer_size());
+	/*
 	for(int i = 0; i < ISP_NUMBER; i++){
 		printf("%d ", get_circular_buffer_isp_count(buffer, i));
 	}
 	printf("sum=%d\n", get_circular_buffer_size(buffer));
+	*/
 }
