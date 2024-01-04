@@ -6,7 +6,7 @@
 #include <time.h>
 #include <stdbool.h>
 
-#define BUFFER_SIZE 10000
+#define MAX_BUFFER_SIZE 10000
 #define ISP_NUMBER 10
 
 //#define circular_buffer_ptr struct circular_buffer*
@@ -18,7 +18,7 @@ struct packet_info {
 };
 
 struct circular_buffer {
-	struct packet_info _data[BUFFER_SIZE];
+	struct packet_info _data[MAX_BUFFER_SIZE];
 	int isp_count[ISP_NUMBER];
 	int _start;
 	int _end;
