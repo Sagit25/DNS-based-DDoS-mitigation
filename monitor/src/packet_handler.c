@@ -24,8 +24,13 @@ void packet_handler(u_char *extra_user_data, const struct pcap_pkthdr *packet_he
 	struct tcphdr *tcp_header = (struct tcphdr *)(packet + 14 + (ip_header->ip_hl << 2));
 
 	// clear buffer by removing old packets
-	while(!is_circular_buffer_empty(buffer) && packet_header->ts.tv_sec - get_circular_buffer_front(buffer).ts.tv_sec > 1){
-		pop_circular_buffer(buffer);
+	while(!is_circular_buffer_empty(buffer)){
+		long time_diff = packet_header->ts.tv_sec - get_circular_buffer_front(buffer).ts.tv_sec;
+		if(time_diff > 1){
+			pop_circular_buffer(buffer);
+		} else {
+			break;
+		}
 	}
 
 	// Only analyze TCP-SYN packets
