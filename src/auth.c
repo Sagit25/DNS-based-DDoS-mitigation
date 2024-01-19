@@ -7,7 +7,7 @@
 #include <arpa/inet.h>
 #include <sys/socket.h>
 
-#include "include/puzzle.h"
+#include "puzzle.h"
 
 int main(int argc, char* argv[]) {
     int auth_sock;
@@ -24,7 +24,7 @@ int main(int argc, char* argv[]) {
     // Set host ip and port
     struct ip_msg ipmsg;
     ipmsg.ip_str = argv[3];
-    ipmsg.ip_num = stohi(argv[3]);
+    ipmsg.ip_num = inet_addr(argv[3]);
     ipmsg.port_num = atoi(argv[4]);
     
     // Create and bind authoritative name server UDP socket

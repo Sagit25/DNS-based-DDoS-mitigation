@@ -7,13 +7,13 @@
 #include <arpa/inet.h>
 #include <sys/socket.h>
 
-#include "include/puzzle.h"
+#include "puzzle.h"
 
 int main(int argc, char* argv[]) {
     int client_tcp_sock, client_udp_sock;
     char msg[BUF_SIZE];
     int msg_len;
-    socklen_t local_dns_adr_sz, server_adr_sz;
+    socklen_t local_dns_adr_sz;
     struct sockaddr_in local_dns_adr, server_adr;
     struct ip_msg ipmsg;
     struct puzzle_msg pmsg;
@@ -26,7 +26,8 @@ int main(int argc, char* argv[]) {
 
     // Create client's UDP socket 
     client_udp_sock = socket(PF_INET, SOCK_DGRAM, 0); 
-    if (client_udp_sock != 0) 
+    printf("%d", client_udp_sock);
+    if (client_udp_sock == -1) 
     {
         printf("UDP socket creation error\n");
         exit(1);   
@@ -78,7 +79,6 @@ int main(int argc, char* argv[]) {
 
     // Loop for sending TCP packets to host server
     while (1) {
-        server_adr_sz = sizeof(server_adr);
         int send_result = send(client_tcp_sock, msg, strlen(msg), 0);
         while (send_result == -1) { // TCP SYN reset
             // Send UDP packet to get puzzle information
@@ -93,7 +93,8 @@ int main(int argc, char* argv[]) {
                 exit(1);   
             }
             msg[msg_len] = '\0';
-            printf("token:%d, threshold:%d\n", pmsg.token, pmsg.threshold);
+            printf("token:%u, threshold:%u\n", pmsg.token, pmsg.threshold);
+            syscall(461, inet_addr(INADDR_ANY), pmsg.token, pmsg.threshold); // set_puzzle_cache()
             
             // Re-send TCP packets
             send_result = send(client_tcp_sock, msg, strlen(msg), 0);

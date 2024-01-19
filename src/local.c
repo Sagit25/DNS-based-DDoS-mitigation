@@ -7,7 +7,7 @@
 #include <arpa/inet.h>
 #include <sys/socket.h>
 
-#include "include/puzzle.h"
+#include "puzzle.h"
 
 int main(int argc, char* argv[]) {
     int local_dns_sock;
@@ -52,7 +52,7 @@ int main(int argc, char* argv[]) {
     struct chain_msg cmsg;
     int seed, length = 1, threshold;
     int hash_chain[MAX_CHAIN_LENGTH];
-    memset(&hash_chain, 0, MAX_CHAIN_LENGTH);
+    memset(&hash_chain, 0, sizeof(hash_chain));
 
     while (1) {
         client_adr_sz = sizeof(client_adr);
