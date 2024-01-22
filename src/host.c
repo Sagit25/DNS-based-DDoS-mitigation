@@ -26,6 +26,7 @@ int main(int argc, char* argv[]) {
         printf("UDP socket creation error\n");
         exit(1);
     }
+    printf("Create host server UDP socket\n");
     memset(&host_adr, 0, sizeof(host_adr));
     host_adr.sin_family = AF_INET;
     host_adr.sin_addr.s_addr = inet_addr(argv[1]);
@@ -34,12 +35,14 @@ int main(int argc, char* argv[]) {
         printf("bind() error\n");
         exit(1);
     }
+    printf("Bind host server UDP socket\n");
 
     // Listen TCP socket for incoming connections
-    if (listen(host_sock, 5) == -1) {
+    if (listen(host_sock, 15) == -1) {
         printf("listen() error\n");
         exit(1);
     }
+    printf("Change to listen state\n");
 
     // Loop for response TCP packets
     while (1) {
@@ -50,21 +53,18 @@ int main(int argc, char* argv[]) {
             printf("accept() error\n");
             exit(1);
         }
+        printf("Accept connection from client socket\n");
 
         // Receive and send message between client and host server
-        if (recv(host_sock, msg, strlen(msg), 0) == -1) {
-            printf("recv() error\n");
-            exit(1);
-        }
-        if (send(host_sock, msg, strlen(msg), 0)) {
-            printf("send() error\n");
-            exit(1);
-        }
-
-        // Close client TCP socket
-        close(client_sock);
+        int rcv_ret = recv(client_sock, msg, BUF_SIZE-1, 0);
+        printf("Receive message from client (%d)\n", rcv_ret);
+        int snd_ret = send(client_sock, msg, BUF_SIZE-1, 0);
+        printf("Send message to client (%d)\n", snd_ret);
     }
 
+    // Close client TCP socket
+    close(client_sock);
+    printf("Close connection from client socket\n");
     // Close host server socket
     close(host_sock);
 

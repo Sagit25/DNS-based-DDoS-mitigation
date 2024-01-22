@@ -34,6 +34,7 @@ int main(int argc, char* argv[]) {
         printf("UDP socket creation error");
         exit(1);
     }
+    printf("Create authoritative name server UDP socket\n");
     memset(&auth_adr, 0, sizeof(auth_adr));
     auth_adr.sin_family = AF_INET;
     auth_adr.sin_addr.s_addr = inet_addr(argv[1]);
@@ -43,12 +44,15 @@ int main(int argc, char* argv[]) {
         printf("bind() error");
         exit(1);
     }
+    printf("Bind authoritative name server UDP socket\n");
 
     while (1) {
         local_dns_adr_sz = sizeof(local_dns_adr);
         recvfrom(auth_sock, msg, BUF_SIZE, 0, (struct sockaddr*)&local_dns_adr, &local_dns_adr_sz);
+        printf("Receive message from local dns server\n");
         if (msg[0] == 'i') {
             sendto(auth_sock, (void*)&ipmsg, sizeof(ipmsg), 0, (struct sockaddr*)&local_dns_adr, local_dns_adr_sz);
+            printf("Send host ip record to local dns server\n");
         }
         else {
             struct chain_msg cmsg;
@@ -56,6 +60,7 @@ int main(int argc, char* argv[]) {
             cmsg.length = MAX_CHAIN_LENGTH; // TODO
             cmsg.threshold = syscall(453, ipmsg.ip_num);
             sendto(auth_sock, (void*)&cmsg, sizeof(cmsg), 0, (struct sockaddr*)&local_dns_adr, local_dns_adr_sz);
+            printf("Send puzzle record to local dns server\n");
         }
         
     }

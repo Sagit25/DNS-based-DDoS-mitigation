@@ -23,7 +23,7 @@ int main(int argc, char* argv[]) {
 
     // Set host ip and port
     struct ip_msg ipmsg;
-    ipmsg.port_num = 0;
+    ipmsg.ip_num = 0;
     
     // Create and bind local DNS UDP socket
     local_dns_sock = socket(PF_INET, SOCK_DGRAM, 0);
@@ -32,6 +32,7 @@ int main(int argc, char* argv[]) {
         printf("UDP socket creation error");
         exit(1);
     }
+    printf("Create local DNS server UDP socket\n");
     memset(&local_dns_adr, 0, sizeof(local_dns_adr));
     local_dns_adr.sin_family = AF_INET;
     local_dns_adr.sin_addr.s_addr = inet_addr(argv[1]);
@@ -41,6 +42,7 @@ int main(int argc, char* argv[]) {
         printf("bind() error");
         exit(1);
     }
+    printf("Bind local DNS server UDP socket\n");
 
     // Define authoritative name server address
     memset(&auth_adr, 0, sizeof(auth_adr));
@@ -58,17 +60,21 @@ int main(int argc, char* argv[]) {
         client_adr_sz = sizeof(client_adr);
         auth_adr_sz = sizeof(auth_adr);
         recvfrom(local_dns_sock, msg, BUF_SIZE, 0, (struct sockaddr*)&client_adr, &client_adr_sz);
+        printf("Receive message from client\n");
         if (msg[0] == 'i') {
-            if (ipmsg.port_num == 0) {
+            if (ipmsg.ip_num == 0) {
                 sendto(local_dns_sock, msg, strlen(msg), 0, (struct sockaddr*)&auth_adr, auth_adr_sz);
                 recvfrom(local_dns_sock, (void*)&ipmsg, sizeof(ipmsg), 0, (struct sockaddr*)&auth_adr, &auth_adr_sz);
+                printf("Get host ip record from authoritative name server\n");
             }
             sendto(local_dns_sock, (void*)&ipmsg, sizeof(ipmsg), 0, (struct sockaddr*)&client_adr, client_adr_sz);
+            printf("Send host ip record to client\n");
         }
         else {
             if (length <= 1) {
                 sendto(local_dns_sock, msg, strlen(msg), 0, (struct sockaddr*)&auth_adr, auth_adr_sz);
                 recvfrom(local_dns_sock, (void*)&cmsg, sizeof(cmsg), 0, (struct sockaddr*)&auth_adr, &auth_adr_sz);
+                printf("Get puzzle record from authoritative name server\n");
                 seed = cmsg.seed;
                 threshold = cmsg.threshold;
                 hash_chain[0] = seed;
@@ -80,6 +86,7 @@ int main(int argc, char* argv[]) {
             }
             struct puzzle_msg pmsg = {hash_chain[length--], threshold};
             sendto(local_dns_sock, (void*)&pmsg, sizeof(pmsg), 0, (struct sockaddr*)&client_adr, client_adr_sz);
+            printf("Send puzzle record to client\n");
         }
         
     }
