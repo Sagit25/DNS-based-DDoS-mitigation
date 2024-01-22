@@ -13,12 +13,12 @@ int main(int argc, char* argv[]) {
         exit(1);
     }
 
-    int ret = syscall(454, inet_addr(argv[1]), stoi(argv[2]));
+    int ret = syscall(454, inet_addr(argv[1]), atoi(argv[2]));
     if (ret != 0) {
         printf("Set threshold error!\n");
         return 0;
     }
-    printf("Change threshold ip:%s, threshold:%d", argv[1], stoi(argv[2]));
+    printf("Change threshold ip:%s, threshold:%d", argv[1], atoi(argv[2]));
 
     return 0;
 }

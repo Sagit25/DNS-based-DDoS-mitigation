@@ -26,7 +26,6 @@ int main(int argc, char* argv[]) {
 
     // Create client's UDP socket 
     client_udp_sock = socket(PF_INET, SOCK_DGRAM, 0); 
-    printf("%d", client_udp_sock);
     if (client_udp_sock == -1) 
     {
         printf("UDP socket creation error\n");
@@ -38,12 +37,14 @@ int main(int argc, char* argv[]) {
     local_dns_adr.sin_port = htons(atoi(argv[2]));
 
     // Set local DNS in kernel
-    int ret = syscall(458, ntohl(local_dns_adr.sin_addr.s_addr), atoi(argv[2]));
+    /*
+    int ret = syscall(458, inet_addr(argv[1]), atoi(argv[2]));
     if (ret != 0) 
     {
         printf("Set local DNS error\n");
         exit(1);   
     }
+    */
 
     // Send UDP packet to get target server address
     local_dns_adr_sz = sizeof(local_dns_adr);
@@ -57,7 +58,7 @@ int main(int argc, char* argv[]) {
         exit(1);   
     }
     msg[msg_len] = '\0';
-    printf("%s:%d\n", ipmsg.ip_str, ipmsg.port_num);
+    printf("%d:%d\n", ipmsg.ip_num, ipmsg.port_num);
 
     // Create and connect client's TCP socket
     client_tcp_sock = socket(PF_INET, SOCK_STREAM, 0); 
@@ -68,7 +69,7 @@ int main(int argc, char* argv[]) {
     }
     memset(&server_adr, 0, sizeof(server_adr));
     server_adr.sin_family = AF_INET;
-    server_adr.sin_addr.s_addr = inet_addr(ipmsg.ip_str);
+    server_adr.sin_addr.s_addr = ipmsg.ip_num;
     server_adr.sin_port = htons(ipmsg.port_num);
     if (connect(client_tcp_sock, (struct sockaddr*)&server_adr, sizeof(server_adr)) == -1) 
     {
