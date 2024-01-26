@@ -6,6 +6,8 @@
 #include <unistd.h>
 #include <arpa/inet.h>
 #include <sys/socket.h>
+#include <time.h>
+#include <sys/time.h>
 
 #include "puzzle.h"
 
@@ -44,6 +46,10 @@ int main(int argc, char* argv[]) {
     }
     printf("Change to listen state\n");
 
+    int count = 0;
+    struct timeval tv;
+    double begin, end;
+
     // Loop for response TCP packets
     while (1) {
         // Accept client TCP socket
@@ -55,16 +61,30 @@ int main(int argc, char* argv[]) {
         }
         printf("Accept connection from client socket\n");
 
+        if (count == 0) {
+            gettimeofday(&tv, NULL);
+            begin = (tv.tv_sec) * 1000 + (tv.tv_usec) / 1000;
+        }
+	    if (count == 1000) {
+            gettimeofday(&tv, NULL);
+            end = (tv.tv_sec) * 1000 + (tv.tv_usec) / 1000;
+            printf("Time for receive 1000 packets %f\n", (end-begin)/1000);
+            close(client_sock);
+            close(host_sock);
+            exit(1);
+        }
+
         // Receive and send message between client and host server
         int rcv_ret = recv(client_sock, msg, BUF_SIZE-1, 0);
         printf("Receive message from client (%d)\n", rcv_ret);
         int snd_ret = send(client_sock, msg, BUF_SIZE-1, 0);
         printf("Send message to client (%d)\n", snd_ret);
+
+        // Close client TCP socket
+        close(client_sock);
+        printf("Close connection from client socket\n");
     }
 
-    // Close client TCP socket
-    close(client_sock);
-    printf("Close connection from client socket\n");
     // Close host server socket
     close(host_sock);
 

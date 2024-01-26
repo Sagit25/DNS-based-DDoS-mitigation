@@ -12,7 +12,7 @@ int main(int argc, char* argv[]) {
         printf("Usage : %s <local dns ip> <threshold>\n", argv[0]);
         exit(1);
     }
-
+    syscall(456, 2);
     int ret = syscall(454, inet_addr(argv[1]), atoi(argv[2]));
     if (ret != 0) {
         printf("Set threshold error!\n");
