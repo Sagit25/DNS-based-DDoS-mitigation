@@ -80,35 +80,31 @@ int main(int argc, char* argv[]) {
 
         // Connect TCP socket to target server
         server_adr_sz = sizeof(server_adr);
-        if (connect(client_tcp_sock, (struct sockaddr*)&server_adr, server_adr_sz) == -1) 
+        int connect_result = connect(client_tcp_sock, (struct sockaddr*)&server_adr, server_adr_sz);
+        while (connect_Result == -1) // TCP SYN reset
         {
-            printf("connect() error\n");
-            exit(1);   
-        }
-        printf("Connect to client TCP socket [%d:%d]\n", ipmsg.ip_num, ipmsg.port_num);
-
-        // Send TCP packet
-        int send_result = send(client_tcp_sock, msg, BUF_SIZE-1, 0);
-        printf("Send TCP packets to target server (%d)\n", send_result);
-        while (send_result == -1) { // TCP SYN reset
             // Send UDP packet to get puzzle information
             local_dns_adr_sz = sizeof(local_dns_adr);
             msg[0] = 'p';
             msg[1] = '\0';
             sendto(client_udp_sock, msg, strlen(msg), 0, (struct sockaddr*)&local_dns_adr, local_dns_adr_sz);
             msg_len = recvfrom(client_udp_sock, (void*)&pmsg, sizeof(pmsg), 0, (struct sockaddr *)&local_dns_adr, &local_dns_adr_sz);
-            if (msg_len < 0) 
-            {
-                printf("UDP recvfrom() error\n");
+            if (msg_len < 0) {
+                printf("UDP recvfrom() error - puzzle record\n");
                 exit(1);   
             }
             msg[msg_len] = '\0';
             printf("token:%u, threshold:%u\n", pmsg.token, pmsg.threshold);
             syscall(461, inet_addr(INADDR_ANY), pmsg.token, pmsg.threshold); // set_puzzle_cache()
             
-            // Re-send TCP packets
-            send_result = send(client_tcp_sock, msg, BUF_SIZE-1, 0);
+            // Re-send TCP SYN packets
+            connect_result = connect(client_tcp_sock, msg, BUF_SIZE-1, 0);
         }
+        printf("Connect to client TCP socket [%d:%d]\n", ipmsg.ip_num, ipmsg.port_num);
+
+        // Send TCP packet
+        int send_result = send(client_tcp_sock, msg, BUF_SIZE-1, 0);
+        printf("Send TCP packets to target server (%d)\n", send_result);
         msg_len = recv(client_tcp_sock, msg_rcv, BUF_SIZE-1, 0);
         msg_rcv[msg_len] = '\0';
         printf("Receive TCP packets from target server (%d)\n", msg_len);
