@@ -39,8 +39,8 @@ int main(int argc, char* argv[]) {
     printf("Bind address of local DNS server\n");
 
     // Set local DNS in kernel
-    int ret = syscall(458, inet_addr(argv[1]), atoi(argv[2]));
-    if (ret != 0) 
+    int lret = syscall(458, inet_addr(argv[1]), atoi(argv[2]));
+    if (lret != 0) 
     {
         printf("Set local DNS error\n");
         exit(1);   
@@ -81,7 +81,7 @@ int main(int argc, char* argv[]) {
         // Connect TCP socket to target server
         server_adr_sz = sizeof(server_adr);
         int connect_result = connect(client_tcp_sock, (struct sockaddr*)&server_adr, server_adr_sz);
-        while (connect_Result == -1) // TCP SYN reset
+        while (connect_result == -1) // TCP SYN reset
         {
             // Send UDP packet to get puzzle information
             local_dns_adr_sz = sizeof(local_dns_adr);
@@ -94,11 +94,16 @@ int main(int argc, char* argv[]) {
                 exit(1);   
             }
             msg[msg_len] = '\0';
-            printf("token:%u, threshold:%u\n", pmsg.token, pmsg.threshold);
-            syscall(461, inet_addr(INADDR_ANY), pmsg.token, pmsg.threshold); // set_puzzle_cache()
+            printf("Get puzzle token:%u, threshold:%u\n", pmsg.token, pmsg.threshold);
+            syscall(456, 1); // set_puzzle_type()
+            int ret = syscall(461, inet_addr(INADDR_ANY), pmsg.token, pmsg.threshold); // set_puzzle_cache()
+            if (ret < 0) {
+                printf("Set puzzle cache error");
+                exit(1);   
+            }
             
             // Re-send TCP SYN packets
-            connect_result = connect(client_tcp_sock, msg, BUF_SIZE-1, 0);
+            connect_result = connect(client_tcp_sock, (struct sockaddr*)&server_adr, server_adr_sz);
         }
         printf("Connect to client TCP socket [%d:%d]\n", ipmsg.ip_num, ipmsg.port_num);
 
