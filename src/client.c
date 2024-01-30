@@ -96,8 +96,8 @@ int main(int argc, char* argv[]) {
             msg[msg_len] = '\0';
             printf("Get puzzle token:%u, threshold:%u\n", pmsg.token, pmsg.threshold);
             syscall(456, 1); // set_puzzle_type()
-            printf("ip: %u\n", iptou("127.0.0.1"));
-            int ret = syscall(461, iptou("127.0.0.1"), pmsg.token, pmsg.threshold); // set_puzzle_cache()
+            printf("ip: %u\n", inet_addr("127.0.0.1"));
+            int ret = syscall(461, inet_addr("127.0.0.1"), pmsg.token, pmsg.threshold); // set_puzzle_cache()
             if (ret < 0) {
                 printf("Set puzzle cache error");
                 exit(1);   
