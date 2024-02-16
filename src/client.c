@@ -117,8 +117,6 @@ int main(int argc, char* argv[]) {
 
         // Close client TCP socket
         close(client_tcp_sock);
-        
-        sleep(1);
     }
     
     // Close client UDP socket

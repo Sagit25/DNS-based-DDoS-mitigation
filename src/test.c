@@ -14,7 +14,7 @@ int main(int argc, char* argv[]) {
     }
     syscall(456, 1);
     int ret = syscall(454, inet_addr(argv[1]), atoi(argv[2]));
-    if (ret != 0) {
+    if (ret != atoi(argv[2])) {
         printf("Set threshold error!\n");
         return 0;
     }
