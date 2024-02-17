@@ -6,8 +6,6 @@
 #include <unistd.h>
 #include <arpa/inet.h>
 #include <sys/socket.h>
-#include <time.h>
-#include <sys/time.h>
 
 #include "puzzle.h"
 
@@ -28,7 +26,7 @@ int main(int argc, char* argv[]) {
         printf("UDP socket creation error\n");
         exit(1);
     }
-    printf("Create host server UDP socket\n");
+    printf("Create host server TCP socket\n");
     memset(&host_adr, 0, sizeof(host_adr));
     host_adr.sin_family = AF_INET;
     host_adr.sin_addr.s_addr = inet_addr(argv[1]);
@@ -37,7 +35,7 @@ int main(int argc, char* argv[]) {
         printf("bind() error\n");
         exit(1);
     }
-    printf("Bind host server UDP socket\n");
+    printf("Bind host server TCP socket\n");
 
     // Listen TCP socket for incoming connections
     if (listen(host_sock, 15) == -1) {
@@ -45,10 +43,6 @@ int main(int argc, char* argv[]) {
         exit(1);
     }
     printf("Change to listen state\n");
-
-    int count = 0;
-    struct timeval tv;
-    double begin, end;
 
     // Loop for response TCP packets
     while (1) {
@@ -60,19 +54,6 @@ int main(int argc, char* argv[]) {
             exit(1);
         }
         printf("Accept connection from client socket\n");
-
-        if (count == 0) {
-            gettimeofday(&tv, NULL);
-            begin = (tv.tv_sec) * 1000 + (tv.tv_usec) / 1000;
-        }
-	    if (count == 1000) {
-            gettimeofday(&tv, NULL);
-            end = (tv.tv_sec) * 1000 + (tv.tv_usec) / 1000;
-            printf("Time for receive 1000 packets %f\n", (end-begin)/1000);
-            close(client_sock);
-            close(host_sock);
-            exit(1);
-        }
 
         // Receive and send message between client and host server
         int rcv_ret = recv(client_sock, msg, BUF_SIZE-1, 0);

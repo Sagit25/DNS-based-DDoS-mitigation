@@ -12,13 +12,13 @@ int main(int argc, char* argv[]) {
         printf("Usage : %s <local dns ip> <threshold>\n", argv[0]);
         exit(1);
     }
-    syscall(456, 1);
-    int ret = syscall(454, inet_addr(argv[1]), atoi(argv[2]));
+    syscall(456, 1); // set puzzle type()
+    int ret = syscall(454, inet_addr(argv[1]), atoi(argv[2])); // set threshold()
     if (ret != atoi(argv[2])) {
         printf("Set threshold error!\n");
         return 0;
     }
-    printf("Change threshold ip:%s, threshold:%d\n", argv[1], atoi(argv[2]));
+    printf("Change threshold ip:%s, threshold:%d\n", inet_addr(argv[1]), syscall(453, inet_addr(argv[1])));
 
     return 0;
 }

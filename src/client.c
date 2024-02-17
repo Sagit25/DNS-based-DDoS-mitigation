@@ -13,14 +13,14 @@ int main(int argc, char* argv[]) {
     int client_tcp_sock, client_udp_sock;
     char msg[BUF_SIZE], msg_rcv[BUF_SIZE];
     int msg_len;
-    socklen_t local_dns_adr_sz, server_adr_sz;
-    struct sockaddr_in local_dns_adr, server_adr;
+    socklen_t local_dns_adr_sz, server_adr_sz, client_adr_sz;
+    struct sockaddr_in local_dns_adr, server_adr, client_adr;
     struct ip_msg ipmsg;
     struct puzzle_msg pmsg;
 
     if (argc != 3) 
     {
-        printf("Usage : %s <local dns ip> <local dns port>\n", argv[0]);
+        printf("Usage : %s <local dns ip> <local dns port> <client ip> <client port>\n", argv[0]);
         exit(1);
     }
 
@@ -77,10 +77,18 @@ int main(int argc, char* argv[]) {
             exit(1);   
         }
         printf("Create client TCP socket\n");
+        memset(&client_adr, 0, sizeof(client_adr));
+        client_adr.sin_family = AF_INET;
+        client_adr.sin_addr.s_addr = atoi(argv[3]);
+        client_adr.sin_port = htons(atoi(argv[4]));
+        if (bind(client_tcp_sock, (struct sockaddr*)&client_adr, sizeof(client_adr)) == -1) {
+            printf("bind() error\n");
+            exit(1);
+        }
+        printf("Bind client server TCP socket\n");
 
         // Connect TCP socket to target server
-        server_adr_sz = sizeof(server_adr);
-        int connect_result = connect(client_tcp_sock, (struct sockaddr*)&server_adr, server_adr_sz);
+        int connect_result = connect(client_tcp_sock, (struct sockaddr*)&server_adr, sizeof(server_adr));
         while (connect_result == -1) // TCP SYN reset
         {
             // Send UDP packet to get puzzle information
@@ -95,9 +103,8 @@ int main(int argc, char* argv[]) {
             }
             msg[msg_len] = '\0';
             printf("Get puzzle token:%u, threshold:%u\n", pmsg.token, pmsg.threshold);
-            syscall(456, 1); // set_puzzle_type()
-            printf("ip: %u\n", inet_addr("127.0.0.1"));
-            int ret = syscall(461, inet_addr("127.0.0.1"), pmsg.token, pmsg.threshold); // set_puzzle_cache()
+            printf("ip: %u\n", atoi(argv[3]));
+            int ret = syscall(461, atoi(argv[3]), atoi(argv[1]), 1, pmsg.token, pmsg.threshold); // set_puzzle_cache()
             if (ret < 0) {
                 printf("Set puzzle cache error");
                 exit(1);   

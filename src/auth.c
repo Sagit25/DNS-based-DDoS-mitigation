@@ -9,17 +9,22 @@
 
 #include "puzzle.h"
 
+#define WO_MONITOR 0
+#define W_MONITOR 1
+
 int main(int argc, char* argv[]) {
     int auth_sock;
+    int monitor_mode = WO_MONITOR;
     char msg[BUF_SIZE];
-    socklen_t local_dns_adr_sz;
-    struct sockaddr_in local_dns_adr, auth_adr;
+    socklen_t local_dns_adr_sz, monitor_adr_sz;
+    struct sockaddr_in local_dns_adr, auth_adr, monitor_adr;
 
-    if (argc != 5) 
+    if (argc != 5 && argc != 8) 
     {
-        printf("Usage : %s <auth ip> <auth port> <host ip> <host port> \n", argv[0]);
+        printf("Usage : %s <auth ip> <auth port> <host ip> <host port> (<monitor mode> <monitor ip> <monitor port>)\n", argv[0]);
         exit(1);
     }
+    if (argc == 8) monitor_mode = W_MONITOR;
 
     // Set host ip and port
     struct ip_msg ipmsg;
@@ -46,6 +51,14 @@ int main(int argc, char* argv[]) {
     }
     printf("Bind authoritative name server UDP socket\n");
 
+    // Define monitor server address
+    if (monitor_mode == W_MONITOR) {
+        memset(&monitor_adr, 0, sizeof(monitor_adr));
+        monitor_adr.sin_family = AF_INET;
+        monitor_adr.sin_addr.s_addr = inet_addr(argv[6]);
+        monitor_adr.sin_port = htons(atoi(argv[7]));
+    }
+
     while (1) {
         local_dns_adr_sz = sizeof(local_dns_adr);
         recvfrom(auth_sock, msg, BUF_SIZE, 0, (struct sockaddr*)&local_dns_adr, &local_dns_adr_sz);
@@ -56,9 +69,19 @@ int main(int argc, char* argv[]) {
         }
         else {
             struct chain_msg cmsg;
-            cmsg.seed = rand();
-            cmsg.length = MAX_CHAIN_LENGTH; // TODO
-            cmsg.threshold = syscall(453, ipmsg.ip_num);
+            if (mode = WO_MONITOR) {
+                cmsg.seed = rand();
+                cmsg.length = MAX_CHAIN_LENGTH; // TODO
+                cmsg.threshold = syscall(453, ipmsg.ip_num);
+            }
+            else {
+                // Get hash chain message from monitor
+                monitor_adr_sz = sizeof(monitor_adr);
+                sendto(auth_sock, cmsg, sizeof(cmsg), 0, (struct sockaddr*)&monitor_adr, monitor_adr_sz);
+                printf("Receive message from auth server\n");
+                recvfrom(auth_sock, (void*)&cmsg, sizeof(cmsg), 0, (struct sockaddr*)&monitor_adr, &monitor_adr_sz);
+                printf("Send puzzle record to monitor server\n");
+            }
             sendto(auth_sock, (void*)&cmsg, sizeof(cmsg), 0, (struct sockaddr*)&local_dns_adr, local_dns_adr_sz);
             printf("Send puzzle record to local dns server\n");
         }

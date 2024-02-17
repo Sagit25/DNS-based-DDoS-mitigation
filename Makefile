@@ -25,5 +25,11 @@ local: src/local.c
 client: src/client.c
 	$(CC) -o $@ $< $(CFLAGS)
 
+monitor: src/monitor.c
+	$(CC) -o $@ $< $(CFLAGS)
+
+test: src/test.c
+	$(CC) -o $@ $< $(CFLAGS)
+
 clean:
 	rm -f client host auth local
