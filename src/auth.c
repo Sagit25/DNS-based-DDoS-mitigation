@@ -19,12 +19,12 @@ int main(int argc, char* argv[]) {
     socklen_t local_dns_adr_sz, monitor_adr_sz;
     struct sockaddr_in local_dns_adr, auth_adr, monitor_adr;
 
-    if (argc != 5 && argc != 8) 
+    if (argc != 5 && argc != 7) 
     {
-        printf("Usage : %s <auth ip> <auth port> <host ip> <host port> (<monitor mode> <monitor ip> <monitor port>)\n", argv[0]);
+        printf("Usage : %s <auth ip> <auth port> <host ip> <host port> (<monitor ip> <monitor port>)\n", argv[0]);
         exit(1);
     }
-    if (argc == 8) monitor_mode = W_MONITOR;
+    if (argc == 7) monitor_mode = W_MONITOR;
 
     // Set host ip and port
     struct ip_msg ipmsg;
@@ -55,8 +55,8 @@ int main(int argc, char* argv[]) {
     if (monitor_mode == W_MONITOR) {
         memset(&monitor_adr, 0, sizeof(monitor_adr));
         monitor_adr.sin_family = AF_INET;
-        monitor_adr.sin_addr.s_addr = inet_addr(argv[6]);
-        monitor_adr.sin_port = htons(atoi(argv[7]));
+        monitor_adr.sin_addr.s_addr = inet_addr(argv[5]);
+        monitor_adr.sin_port = htons(atoi(argv[6]));
     }
 
     while (1) {
