@@ -85,7 +85,6 @@ int main(int argc, char* argv[]) {
             sendto(auth_sock, (void*)&cmsg, sizeof(cmsg), 0, (struct sockaddr*)&local_dns_adr, local_dns_adr_sz);
             printf("Send puzzle record to local dns server\n");
         }
-        
     }
 
     // Close socket

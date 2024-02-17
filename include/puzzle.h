@@ -7,6 +7,10 @@
 #define BUF_SIZE 1024
 #define MAX_CHAIN_LENGTH 10001
 
+#define PZLTYPE_NONE 0
+#define PZLTYPE_EXT 1
+#define PZLTYPE_BOT 2
+
 struct ip_msg {
     char* ip_str;
     int ip_num;
