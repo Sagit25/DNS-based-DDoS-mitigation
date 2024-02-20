@@ -18,7 +18,7 @@ int main(int argc, char* argv[]) {
     struct ip_msg ipmsg;
     struct puzzle_msg pmsg;
 
-    if (argc != 3) 
+    if (argc != 5) 
     {
         printf("Usage : %s <local dns ip> <local dns port> <client ip> <client port>\n", argv[0]);
         exit(1);
@@ -79,7 +79,7 @@ int main(int argc, char* argv[]) {
         printf("Create client TCP socket\n");
         memset(&client_adr, 0, sizeof(client_adr));
         client_adr.sin_family = AF_INET;
-        client_adr.sin_addr.s_addr = atoi(argv[3]);
+        client_adr.sin_addr.s_addr = inet_addr(argv[3]);
         client_adr.sin_port = htons(atoi(argv[4]));
         if (bind(client_tcp_sock, (struct sockaddr*)&client_adr, sizeof(client_adr)) == -1) {
             printf("bind() error\n");
