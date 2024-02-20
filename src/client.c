@@ -13,7 +13,7 @@ int main(int argc, char* argv[]) {
     int client_tcp_sock, client_udp_sock;
     char msg[BUF_SIZE], msg_rcv[BUF_SIZE];
     int msg_len;
-    socklen_t local_dns_adr_sz, server_adr_sz, client_adr_sz;
+    socklen_t local_dns_adr_sz, server_adr_sz;
     struct sockaddr_in local_dns_adr, server_adr, client_adr;
     struct ip_msg ipmsg;
     struct puzzle_msg pmsg;
@@ -111,6 +111,7 @@ int main(int argc, char* argv[]) {
         }
                 
         // Send TCP SYN packets
+        server_adr_sz = sizeof(server_adr);
         int connect_result = connect(client_tcp_sock, (struct sockaddr*)&server_adr, server_adr_sz);
         if (connect_result == -1) {
             printf("Connect failed\n");

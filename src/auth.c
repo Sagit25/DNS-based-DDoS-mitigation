@@ -69,7 +69,7 @@ int main(int argc, char* argv[]) {
         }
         else {
             struct chain_msg cmsg;
-            if (mode = WO_MONITOR) {
+            if (monitor_mode == WO_MONITOR) {
                 cmsg.seed = rand();
                 cmsg.length = MAX_CHAIN_LENGTH; // TODO
                 cmsg.threshold = syscall(453, ipmsg.ip_num);
@@ -77,7 +77,7 @@ int main(int argc, char* argv[]) {
             else {
                 // Get hash chain message from monitor
                 monitor_adr_sz = sizeof(monitor_adr);
-                sendto(auth_sock, cmsg, sizeof(cmsg), 0, (struct sockaddr*)&monitor_adr, monitor_adr_sz);
+                sendto(auth_sock, (void*)&cmsg, sizeof(cmsg), 0, (struct sockaddr*)&monitor_adr, monitor_adr_sz);
                 printf("Receive message from auth server\n");
                 recvfrom(auth_sock, (void*)&cmsg, sizeof(cmsg), 0, (struct sockaddr*)&monitor_adr, &monitor_adr_sz);
                 printf("Send puzzle record to monitor server\n");
