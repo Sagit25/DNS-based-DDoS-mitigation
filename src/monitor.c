@@ -47,6 +47,7 @@ int main(int argc, char* argv[]) {
         struct chain_msg cmsg;
         cmsg.seed = rand();
         cmsg.length = MAX_CHAIN_LENGTH; // TODO
+        cmsg.type = syscall(455);
         cmsg.threshold = syscall(453, ipmsg.ip_num); // TODO
         sendto(monitor_sock, (void*)&cmsg, sizeof(cmsg), 0, (struct sockaddr*)&auth_adr, auth_adr_sz);
         printf("Send puzzle record to auth server\n");
