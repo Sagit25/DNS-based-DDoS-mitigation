@@ -20,7 +20,7 @@ int main(int argc, char* argv[]) {
         printf("Set threshold error!\n");
         return 0;
     }
-    printf("Change threshold ip:%s, threshold:%d\n", inet_addr(argv[1]), syscall(453, inet_addr(argv[1])));
+    printf("Change threshold ip:%s, threshold:%d\n", inet_addr(argv[1]), atoi(argv[2]));
 
     return 0;
 }

@@ -18,6 +18,7 @@ struct ip_msg {
 };
 
 struct puzzle_msg {
+    unsigned int type;
     unsigned int token;
     unsigned int threshold;
 };
@@ -25,9 +26,10 @@ struct puzzle_msg {
 struct chain_msg {
     int seed;
     int length;
+    unsigned int type;
     unsigned int threshold;
 };
 
 int hash_ftn(int seed) {
-    return seed+1;
+    return seed+1; // TODO
 }

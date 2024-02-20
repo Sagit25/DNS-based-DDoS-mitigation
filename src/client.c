@@ -66,11 +66,14 @@ int main(int argc, char* argv[]) {
     server_adr.sin_addr.s_addr = ipmsg.ip_num;
     server_adr.sin_port = htons(ipmsg.port_num);
     printf("Set address of target server\n");
-    
+
     // Loop for sending TCP packets to host server
     while (1) {
         // Create client TCP socket
+        int bind_option;
         client_tcp_sock = socket(PF_INET, SOCK_STREAM, 0); 
+        bind_option = 1;
+        setsockopt(client_tcp_sock, SOL_SOCKET, SO_REUSEADDR, &bind_option, sizeof(bind_option));
         if (client_tcp_sock == -1) 
         {
             printf("TCP socket creation error");
@@ -88,22 +91,24 @@ int main(int argc, char* argv[]) {
         printf("Bind client server TCP socket\n");
 
         int puzzle_type = syscall(455); // get puzzle type()
+        printf("Puzzle type: %d\n", puzzle_type);
 
-        if (puzzle_type == PZLTYPE_EXT) {
-            // Get puzzle record from local dns resolver
-            local_dns_adr_sz = sizeof(local_dns_adr);
-            msg[0] = 'p';
-            msg[1] = '\0';
-            sendto(client_udp_sock, msg, strlen(msg), 0, (struct sockaddr*)&local_dns_adr, local_dns_adr_sz);
-            msg_len = recvfrom(client_udp_sock, (void*)&pmsg, sizeof(pmsg), 0, (struct sockaddr *)&local_dns_adr, &local_dns_adr_sz);
-            if (msg_len < 0) {
-                printf("UDP recvfrom() error - puzzle record\n");
-                exit(1);   
-            }
-            msg[msg_len] = '\0';
-            printf("Get puzzle token:%u, threshold:%u\n", pmsg.token, pmsg.threshold);
-            printf("ip1: %u, 1p2: %u\n", atoi(argv[3]), inet_addr(argv[3]));
-            int ret = syscall(461, atoi(argv[3]), atoi(argv[1]), puzzle_type, pmsg.token, pmsg.threshold); // set_puzzle_cache()
+        // Get puzzle record from local dns resolver
+        local_dns_adr_sz = sizeof(local_dns_adr);
+        msg[0] = 'p';
+        msg[1] = '\0';
+        sendto(client_udp_sock, msg, strlen(msg), 0, (struct sockaddr*)&local_dns_adr, local_dns_adr_sz);
+        msg_len = recvfrom(client_udp_sock, (void*)&pmsg, sizeof(pmsg), 0, (struct sockaddr *)&local_dns_adr, &local_dns_adr_sz);
+        if (msg_len < 0) {
+            printf("UDP recvfrom() error - puzzle record\n");
+            exit(1);   
+        }
+        msg[msg_len] = '\0';
+        printf("Get puzzle type:%u, token:%u, threshold:%u\n", pmsg.type, pmsg.token, pmsg.threshold);
+        printf("ip: %u, ip-swapped: %u\n", inet_addr(argv[3]), ntohl(inet_addr(argv[3])));
+        if (pmsg.type != puzzle_type) {
+            puzzle_type = syscall(456, pmsg.type);
+            int ret = syscall(461, ntohl(inet_addr(argv[3])), inet_addr(argv[1]), pmsg.type, pmsg.token, pmsg.threshold); // set_puzzle_cache()
             if (ret < 0) {
                 printf("Set puzzle cache error");
                 exit(1);   
@@ -114,8 +119,7 @@ int main(int argc, char* argv[]) {
         server_adr_sz = sizeof(server_adr);
         int connect_result = connect(client_tcp_sock, (struct sockaddr*)&server_adr, server_adr_sz);
         if (connect_result == -1) {
-            printf("Connect failed\n");
-            puzzle_type = syscall(456, PZLTYPE_EXT);
+            printf("Connect failed\n"); 
             close(client_tcp_sock);
             continue;
         }

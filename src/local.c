@@ -52,7 +52,7 @@ int main(int argc, char* argv[]) {
 
     // Hash chain variables
     struct chain_msg cmsg;
-    int seed, length = 1, threshold;
+    int seed, length = 1, threshold, type;
     int hash_chain[MAX_CHAIN_LENGTH];
     memset(&hash_chain, 0, sizeof(hash_chain));
 
@@ -77,6 +77,7 @@ int main(int argc, char* argv[]) {
                 printf("Get puzzle record from authoritative name server\n");
                 seed = cmsg.seed;
                 threshold = cmsg.threshold;
+                type = cmsg.type;
                 hash_chain[0] = seed;
                 while (length <= cmsg.length) {
                     hash_chain[length] = hash_ftn(hash_chain[length-1]);
@@ -84,7 +85,7 @@ int main(int argc, char* argv[]) {
                 }
 
             }
-            struct puzzle_msg pmsg = {hash_chain[length--], threshold};
+            struct puzzle_msg pmsg = {type, hash_chain[length--], threshold};
             sendto(local_dns_sock, (void*)&pmsg, sizeof(pmsg), 0, (struct sockaddr*)&client_adr, client_adr_sz);
             printf("Send puzzle record to client\n");
         }
