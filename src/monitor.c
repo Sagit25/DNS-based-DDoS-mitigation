@@ -8,6 +8,7 @@
 #include <sys/socket.h>
 
 #include "puzzle.h"
+#include "detect_ddos.h"
 
 int main(int argc, char* argv[]) {
     int monitor_sock;
@@ -40,9 +41,15 @@ int main(int argc, char* argv[]) {
     }
     printf("Bind monitor server UDP socket\n");
 
+    // Start tcp syn monitoring thread
+    pthread_t tid;
+    start_detect_ddos_thread(&tid);
+
+
     while (1) {
         auth_adr_sz = sizeof(auth_adr);
-        recvfrom(monitor_sock, (void*)&cmsg, sizeof(cmsg), 0, (struct sockaddr*)&auth_adr, &auth_adr_sz);
+        struct ip_msg ipmsg;
+        recvfrom(monitor_sock, (void*)&ipmsg, sizeof(ipmsg), 0, (struct sockaddr*)&auth_adr, &auth_adr_sz);
         printf("Receive message from auth server\n");
         struct chain_msg cmsg;
         cmsg.seed = rand();
@@ -52,6 +59,8 @@ int main(int argc, char* argv[]) {
         sendto(monitor_sock, (void*)&cmsg, sizeof(cmsg), 0, (struct sockaddr*)&auth_adr, auth_adr_sz);
         printf("Send puzzle record to auth server\n");
     }
+
+    stop_detect_ddos_thread(&tid);
 
     // Close socket
     close(monitor_sock);

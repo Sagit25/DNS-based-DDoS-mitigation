@@ -78,7 +78,7 @@ int main(int argc, char* argv[]) {
             else {
                 // Get hash chain message from monitor
                 monitor_adr_sz = sizeof(monitor_adr);
-                sendto(auth_sock, (void*)&cmsg, sizeof(cmsg), 0, (struct sockaddr*)&monitor_adr, monitor_adr_sz);
+                sendto(auth_sock, (void*)&ipmsg, sizeof(ipmsg), 0, (struct sockaddr*)&monitor_adr, monitor_adr_sz);
                 printf("Receive message from auth server\n");
                 recvfrom(auth_sock, (void*)&cmsg, sizeof(cmsg), 0, (struct sockaddr*)&monitor_adr, &monitor_adr_sz);
                 printf("Send puzzle record to monitor server\n");
