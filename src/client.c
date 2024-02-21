@@ -103,16 +103,12 @@ int main(int argc, char* argv[]) {
             printf("UDP recvfrom() error - puzzle record\n");
             exit(1);   
         }
-        msg[msg_len] = '\0';
         printf("Get puzzle type:%u, token:%u, threshold:%u\n", pmsg.type, pmsg.token, pmsg.threshold);
-        printf("ip: %u, ip-swapped: %u\n", inet_addr(argv[3]), ntohl(inet_addr(argv[3])));
-        if (pmsg.type != puzzle_type) {
-            puzzle_type = syscall(456, pmsg.type);
-            int ret = syscall(461, ntohl(inet_addr(argv[3])), inet_addr(argv[1]), pmsg.type, pmsg.token, pmsg.threshold); // set_puzzle_cache()
-            if (ret < 0) {
-                printf("Set puzzle cache error");
-                exit(1);   
-            }
+        if (pmsg.type != puzzle_type) puzzle_type = syscall(456, pmsg.type);
+        int ret = syscall(461, inet_addr(argv[3]), inet_addr(argv[1]), puzzle_type, pmsg.token, pmsg.threshold); // set_puzzle_cache()
+        if (ret < 0) {
+            printf("Set puzzle cache error");
+            exit(1);   
         }
                 
         // Send TCP SYN packets
@@ -120,6 +116,10 @@ int main(int argc, char* argv[]) {
         int connect_result = connect(client_tcp_sock, (struct sockaddr*)&server_adr, server_adr_sz);
         if (connect_result == -1) {
             printf("Connect failed\n"); 
+            msg[0] = 'u';
+            msg[1] = '\0';
+            sendto(client_udp_sock, msg, strlen(msg), 0, (struct sockaddr*)&local_dns_adr, local_dns_adr_sz);
+            recvfrom(client_udp_sock, (void*)&pmsg, sizeof(pmsg), 0, (struct sockaddr *)&local_dns_adr, &local_dns_adr_sz);
             close(client_tcp_sock);
             continue;
         }

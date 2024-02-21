@@ -71,7 +71,8 @@ int main(int argc, char* argv[]) {
             printf("Send host ip record to client\n");
         }
         else {
-            if (length <= 1) {
+            if (length <= 1 || msg[0] == 'u') {
+                length = 1;
                 sendto(local_dns_sock, msg, strlen(msg), 0, (struct sockaddr*)&auth_adr, auth_adr_sz);
                 recvfrom(local_dns_sock, (void*)&cmsg, sizeof(cmsg), 0, (struct sockaddr*)&auth_adr, &auth_adr_sz);
                 printf("Get puzzle record from authoritative name server\n");
@@ -83,13 +84,11 @@ int main(int argc, char* argv[]) {
                     hash_chain[length] = hash_ftn(hash_chain[length-1]);
                     length++;
                 }
-
             }
             struct puzzle_msg pmsg = {type, hash_chain[length--], threshold};
             sendto(local_dns_sock, (void*)&pmsg, sizeof(pmsg), 0, (struct sockaddr*)&client_adr, client_adr_sz);
             printf("Send puzzle record to client\n");
         }
-        
     }
 
     // Close socket
