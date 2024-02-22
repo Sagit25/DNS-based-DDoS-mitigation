@@ -90,8 +90,8 @@ int main(int argc, char* argv[]) {
         }
         printf("Bind client server TCP socket\n");
 
-        int puzzle_type = syscall(455); // get puzzle type()
-        printf("Puzzle type: %d\n", puzzle_type);
+        unsigned int puzzle_type = syscall(455); // get puzzle type()
+        printf("Puzzle type: %u\n", puzzle_type);
 
         // Get puzzle record from local dns resolver
         local_dns_adr_sz = sizeof(local_dns_adr);
