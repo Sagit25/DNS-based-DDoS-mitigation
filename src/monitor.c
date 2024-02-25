@@ -45,7 +45,6 @@ int main(int argc, char* argv[]) {
     pthread_t tid;
     start_detect_ddos_thread(&tid);
 
-
     while (1) {
         auth_adr_sz = sizeof(auth_adr);
         struct ip_msg ipmsg;

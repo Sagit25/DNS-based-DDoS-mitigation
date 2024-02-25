@@ -81,7 +81,7 @@ int main(int argc, char* argv[]) {
                 type = cmsg.type;
                 hash_chain[0] = seed;
                 while (length <= cmsg.length) {
-                    hash_chain[length] = hash_ftn(hash_chain[length-1]);
+                    hash_chain[length] = hash_ftn(HASH_SALT, hash_chain[length-1]);
                     length++;
                 }
             }

@@ -73,7 +73,7 @@ int main(int argc, char* argv[]) {
                 cmsg.seed = rand();
                 cmsg.length = MAX_CHAIN_LENGTH; // TODO
                 cmsg.type = syscall(455);
-                cmsg.threshold = syscall(453, ipmsg.ip_num);
+                cmsg.threshold = syscall(453, local_dns_adr.sin_addr.s_addr); // need to change to local dns ip
             }
             else {
                 // Get hash chain message from monitor
