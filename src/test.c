@@ -15,12 +15,16 @@ int main(int argc, char* argv[]) {
         exit(1);
     }
     int pret = syscall(456, PZLTYPE_EXT); // set puzzle type()
+    if (pret != PZLTYPE_EXT) {
+        printf("Set threshold error!\n");
+        return 0;
+    }
     int ret = syscall(454, inet_addr(argv[1]), atoi(argv[2])); // set threshold()
     if (ret != atoi(argv[2])) {
         printf("Set threshold error!\n");
         return 0;
     }
-    printf("Change ptype: %u, threshold ip:%u, threshold:%ld\n", syscall(455), inet_addr(argv[1]), syscall(453, inet_addr(argv[1])));
+    printf("Change ptype: %u, threshold ip:%u, threshold:%u\n", syscall(455), inet_addr(argv[1]), syscall(453, inet_addr(argv[1])));
 
     return 0;
 }
