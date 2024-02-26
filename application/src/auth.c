@@ -69,17 +69,20 @@ int main(int argc, char* argv[]) {
         }
         else {
             struct chain_msg cmsg;
+            struct ip_msg dipmsg;
+            dipmsg.ip_num = local_dns_adr.sin_addr.s_addr;
+            dipmsg.port_num = local_dns_adr.sin_port;
             if (monitor_mode == WO_MONITOR) {
                 cmsg.seed = rand();
-                cmsg.length = MAX_CHAIN_LENGTH; // TODO
+                cmsg.length = MAX_CHAIN_LENGTH;
                 cmsg.type = syscall(460);
-                cmsg.threshold = syscall(458, local_dns_adr.sin_addr.s_addr); // need to change to local dns ip
-                syscall(455, local_dns_adr.sin_addr.s_addr, cmsg.seed, cmsg.length, cmsg.threshold);
+                cmsg.threshold = syscall(458, dipmsg.ip_num);
+                syscall(455, dipmsg.ip_num, cmsg.seed, cmsg.length, cmsg.threshold);
             }
             else {
                 // Get hash chain message from monitor
                 monitor_adr_sz = sizeof(monitor_adr);
-                sendto(auth_sock, (void*)&ipmsg, sizeof(ipmsg), 0, (struct sockaddr*)&monitor_adr, monitor_adr_sz);
+                sendto(auth_sock, (void*)&dipmsg, sizeof(dipmsg), 0, (struct sockaddr*)&monitor_adr, monitor_adr_sz);
                 printf("Receive message from auth server\n");
                 recvfrom(auth_sock, (void*)&cmsg, sizeof(cmsg), 0, (struct sockaddr*)&monitor_adr, &monitor_adr_sz);
                 printf("Send puzzle record to monitor server\n");

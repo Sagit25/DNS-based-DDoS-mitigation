@@ -24,7 +24,7 @@ int main(int argc, char* argv[]) {
         printf("Set threshold error!\n");
         return 0;
     }
-    printf("Change ptype: %u, threshold ip:%u, threshold:%u\n", syscall(460), inet_addr(argv[1]), syscall(458, inet_addr(argv[1])));
+    printf("Change ptype: %ld, threshold ip:%u, threshold:%ld\n", syscall(460), inet_addr(argv[1]), syscall(458, inet_addr(argv[1])));
 
     return 0;
 }

@@ -13,7 +13,7 @@ int main(int argc, char* argv[]) {
     int bot_tcp_sock, bot_udp_sock;
     char msg[BUF_SIZE], msg_rcv[BUF_SIZE];
     int msg_len;
-    socklen_t local_dns_adr_sz, server_adr_sz, bot_adr_sz;
+    socklen_t local_dns_adr_sz, server_adr_sz;
     struct sockaddr_in local_dns_adr, server_adr, bot_adr;
     struct ip_msg ipmsg;
     struct puzzle_msg pmsg;

@@ -1,0 +1,3 @@
+[submodule "rbpi-kernel"]
+	path = rbpi-kernel
+	url = https://github.com/Sagit25/PDTC-kernel
