@@ -1,5 +1,5 @@
 # DNS-based-DDoS-mitigation
-DNS-based-DDoS-mitigation
+Puzzle-centric DDoS Traffic Control: A DNS-based Approach
 
 ``` Unicode
 DNS-based-DDoS-mitigation (expected)
@@ -10,6 +10,8 @@ DNS-based-DDoS-mitigation (expected)
   │    │    ├── puzzle.h: structures and functions about hash puzzle
   │    │    ├── circular_buffer.h
   │    │    ├── tcp_syn_monitor.h
+  │    │    ├── monitor_log.h
+  │    │    ├── detect_ddos.h
   │    │    └── packet_handler.h
   │    │      
   │    └── src
@@ -21,5 +23,5 @@ DNS-based-DDoS-mitigation (expected)
   │         ├── monitor.c: monitor server
   │         └── monitor
   │         
-  └── kernel(rbpi): whole modified linux kernel code for raspberry pi
+  └── rbpi-kernel: link to modified linux kernel source code for raspberry pi
 ```
