@@ -72,8 +72,9 @@ int main(int argc, char* argv[]) {
             if (monitor_mode == WO_MONITOR) {
                 cmsg.seed = rand();
                 cmsg.length = MAX_CHAIN_LENGTH; // TODO
-                cmsg.type = syscall(455);
-                cmsg.threshold = syscall(453, local_dns_adr.sin_addr.s_addr); // need to change to local dns ip
+                cmsg.type = syscall(460);
+                cmsg.threshold = syscall(458, local_dns_adr.sin_addr.s_addr); // need to change to local dns ip
+                syscall(455, local_dns_adr.sin_addr.s_addr, cmsg.seed, cmsg.length, cmsg.threshold);
             }
             else {
                 // Get hash chain message from monitor

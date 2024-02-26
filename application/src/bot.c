@@ -38,14 +38,6 @@ int main(int argc, char* argv[]) {
     local_dns_adr.sin_port = htons(atoi(argv[2]));
     printf("Bind address of local DNS server\n");
 
-    // Set local DNS in kernel
-    int lret = syscall(458, inet_addr(argv[1]), atoi(argv[2]));
-    if (lret != 0) 
-    {
-        printf("Set local DNS error\n");
-        exit(1);   
-    }
-
     // Send UDP packet to get target server address
     local_dns_adr_sz = sizeof(local_dns_adr);
     msg[0] = 'i';
@@ -70,7 +62,10 @@ int main(int argc, char* argv[]) {
     // Loop for sending TCP packets to host server
     while (1) {
         // Create bot TCP socket
+        int bind_option;
         bot_tcp_sock = socket(PF_INET, SOCK_STREAM, 0); 
+        bind_option = 1;
+        setsockopt(bot_tcp_sock, SOL_SOCKET, SO_REUSEADDR, &bind_option, sizeof(bind_option));
         if (bot_tcp_sock == -1) 
         {
             printf("TCP socket creation error");
@@ -79,7 +74,7 @@ int main(int argc, char* argv[]) {
         printf("Create bot TCP socket\n");
         memset(&bot_adr, 0, sizeof(bot_adr));
         bot_adr.sin_family = AF_INET;
-        bot_adr.sin_addr.s_addr = atoi(argv[3]);
+        bot_adr.sin_addr.s_addr = inet_addr(argv[3]);
         bot_adr.sin_port = htons(atoi(argv[4]));
         if (bind(bot_tcp_sock, (struct sockaddr*)&bot_adr, sizeof(bot_adr)) == -1) {
             printf("bind() error\n");
@@ -87,25 +82,41 @@ int main(int argc, char* argv[]) {
         }
         printf("Bind bot server TCP socket\n");
 
-        int puzzle_type = syscall(455); // get puzzle type()
-        
-        if (puzzle_type == PZLTYPE_EXT) {
-            int ret = syscall(461, atoi(argv[3]), atoi(argv[1]), PZLTYPE_BOT, 0, 0); // set_puzzle_cache()
-            if (ret < 0) {
-                printf("Set puzzle cache error");
-                exit(1);   
-            }
+        unsigned int puzzle_type = syscall(460); // get puzzle type()
+        printf("Puzzle type: %u\n", puzzle_type);
+
+        // Get puzzle record from local dns resolver
+        local_dns_adr_sz = sizeof(local_dns_adr);
+        msg[0] = 'p';
+        msg[1] = '\0';
+        sendto(bot_udp_sock, msg, strlen(msg), 0, (struct sockaddr*)&local_dns_adr, local_dns_adr_sz);
+        msg_len = recvfrom(bot_udp_sock, (void*)&pmsg, sizeof(pmsg), 0, (struct sockaddr *)&local_dns_adr, &local_dns_adr_sz);
+        if (msg_len < 0) {
+            printf("UDP recvfrom() error - puzzle record\n");
+            exit(1);   
+        }
+        printf("Get puzzle type:%u, token:%u, threshold:%u\n", pmsg.type, pmsg.token, pmsg.threshold);
+        if (pmsg.type != puzzle_type) puzzle_type = syscall(461, pmsg.type);
+        if (puzzle_type == PZLTYPE_EXT) puzzle_type = PZLTYPE_BOT;
+        int ret = syscall(457, inet_addr(argv[3]), inet_addr(argv[1]), puzzle_type, pmsg.token, pmsg.threshold); // set_puzzle_cache()
+        if (ret < 0) {
+            printf("Set puzzle cache error");
+            exit(1);   
         }
                 
         // Send TCP SYN packets
-        int connect_result = connect(client_tcp_sock, (struct sockaddr*)&server_adr, server_adr_sz);
+        server_adr_sz = sizeof(server_adr);
+        int connect_result = connect(bot_tcp_sock, (struct sockaddr*)&server_adr, server_adr_sz);
         if (connect_result == -1) {
-            printf("Connect failed\n");
-            puzzle_type = syscall(456, PZLTYPE_EXT);
-            close(client_tcp_sock);
+            printf("Connect failed\n"); 
+            msg[0] = 'u';
+            msg[1] = '\0';
+            sendto(bot_udp_sock, msg, strlen(msg), 0, (struct sockaddr*)&local_dns_adr, local_dns_adr_sz);
+            recvfrom(bot_udp_sock, (void*)&pmsg, sizeof(pmsg), 0, (struct sockaddr *)&local_dns_adr, &local_dns_adr_sz);
+            close(bot_tcp_sock);
             continue;
         }
-        printf("Connect to client TCP socket [%d:%d]\n", ipmsg.ip_num, ipmsg.port_num);
+        printf("Connect to bot TCP socket [%d:%d]\n", ipmsg.ip_num, ipmsg.port_num);
 
         // Send TCP packet
         int send_result = send(bot_tcp_sock, msg, BUF_SIZE-1, 0);

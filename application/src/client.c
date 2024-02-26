@@ -38,14 +38,6 @@ int main(int argc, char* argv[]) {
     local_dns_adr.sin_port = htons(atoi(argv[2]));
     printf("Bind address of local DNS server\n");
 
-    // Set local DNS in kernel
-    int lret = syscall(458, inet_addr(argv[1]), atoi(argv[2]));
-    if (lret != 0) 
-    {
-        printf("Set local DNS error\n");
-        exit(1);   
-    }
-
     // Send UDP packet to get target server address
     local_dns_adr_sz = sizeof(local_dns_adr);
     msg[0] = 'i';
@@ -90,7 +82,7 @@ int main(int argc, char* argv[]) {
         }
         printf("Bind client server TCP socket\n");
 
-        unsigned int puzzle_type = syscall(455); // get puzzle type()
+        unsigned int puzzle_type = syscall(460); // get puzzle type()
         printf("Puzzle type: %u\n", puzzle_type);
 
         // Get puzzle record from local dns resolver
@@ -104,8 +96,8 @@ int main(int argc, char* argv[]) {
             exit(1);   
         }
         printf("Get puzzle type:%u, token:%u, threshold:%u\n", pmsg.type, pmsg.token, pmsg.threshold);
-        if (pmsg.type != puzzle_type) puzzle_type = syscall(456, pmsg.type);
-        int ret = syscall(461, inet_addr(argv[3]), inet_addr(argv[1]), puzzle_type, pmsg.token, pmsg.threshold); // set_puzzle_cache()
+        if (pmsg.type != puzzle_type) puzzle_type = syscall(461, pmsg.type);
+        int ret = syscall(457, inet_addr(argv[3]), inet_addr(argv[1]), puzzle_type, pmsg.token, pmsg.threshold); // set_puzzle_cache()
         if (ret < 0) {
             printf("Set puzzle cache error");
             exit(1);   
