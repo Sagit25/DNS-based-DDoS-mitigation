@@ -18,7 +18,7 @@ int main(int argc, char* argv[]) {
     struct ip_msg ipmsg;
     struct puzzle_msg pmsg;
 
-    if (argc != 3) 
+    if (argc != 5) 
     {
         printf("Usage : %s <local dns ip> <local dns port> <bot ip> <bot port>\n", argv[0]);
         exit(1);
