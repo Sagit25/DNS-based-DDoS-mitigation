@@ -1,44 +1,33 @@
 SOURCES = src/host.c src/auth.c src/local.c src/client.c
 CC = gcc
 CFLAGS = -Wall -O3 -Iinclude
-LDFLAGS = -lssl -lcrypto -lpcap
+LIBS = -lssl -lcrypto -lpcap
 
-all: host.o auth.o local.o client.o bot.o test.o monitor.o
+APPS = host auth local client bot test monitor
 
-host.o: src/host.c
-	$(CC) -o $@ $< $(CFLAGS) $(LDFLAGS)
+all: $(APPS)
 
-auth.o: src/auth.c
-	$(CC) -o $@ $< $(CFLAGS) $(LDFLAGS)
+host: src/host.c
+	$(CC) $(CFLAGS) -o $@ $< $(LIBS)
 
-local.o: src/local.c
-	$(CC) -o $@ $< $(CFLAGS) $(LDFLAGS)
+auth: src/auth.c
+	$(CC) $(CFLAGS) -o $@ $< $(LIBS)
 
-client.o: src/client.c
-	$(CC) -o $@ $< $(CFLAGS) $(LDFLAGS)
+local: src/local.c
+	$(CC) $(CFLAGS) -o $@ $< $(LIBS)
 
-bot.o: src/bot.c
-	$(CC) -o $@ $< $(CFLAGS) $(LDFLAGS)
+client: src/client.c
+	$(CC) $(CFLAGS) -o $@ $< $(LIBS)
 
-test.o: src/test.c
-	$(CC) -o $@ $< $(CFLAGS) $(LDFLAGS)
+bot: src/bot.c
+	$(CC) $(CFLAGS) -o $@ $< $(LIBS)
 
-monitor.o: mon.o circ.o packet.o syn.o log.o ddos.o
-	$(CC) -o $@ mon.o circ.o packet.o syn.o log.o ddos.o $(CFLAGS) $(LDFLAGS)
-	rm -f mon.o circ.o packet.o syn.o log.o ddos.o
+test: src/test.c
+	$(CC) $(CFLAGS) -o $@ $< $(LIBS)
 
-mon.o: src/monitor.c 
-	$(CC) -c -o $@ $< $(CFLAGS) $(LDFLAGS)
-circ.o: src/monitor/circular_buffer.c
-	$(CC) -c -o $@ $< $(CFLAGS) $(LDFLAGS)
-packet.o: src/monitor/packet_handler.c
-	$(CC) -c -o $@ $< $(CFLAGS) $(LDFLAGS)
-syn.o: src/monitor/tcp_syn_monitor.c
-	$(CC) -c -o $@ $< $(CFLAGS) $(LDFLAGS)
-log.o: src/monitor/monitor_log.c
-	$(CC) -c -o $@ $< $(CFLAGS) $(LDFLAGS)
-ddos.o: src/monitor/detect_ddos.c
-	$(CC) -c -o $@ $< $(CFLAGS) $(LDFLAGS)
+monitor: src/monitor/main.c src/monitor/circular_buffer.c src/monitor/packet_handler.c src/monitor/tcp_syn_monitor.c src/monitor/monitor_log.c src/monitor/detect_ddos.c
+	$(CC) $(CFLAGS) -o $@ $< $(LIBS)
+
 
 clean:
-	rm -f *.o
+	rm -f $(APPS)
