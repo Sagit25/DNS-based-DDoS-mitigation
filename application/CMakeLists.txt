@@ -10,7 +10,7 @@ project(DNS-based-DDoS-mitigation)
 include_directories(include)
 
 function(build_app APP_NAME)
-    add_executable(${APP_NAME} ${ARGS})
+    add_executable(${APP_NAME} ${ARGN})
     target_link_libraries(${APP_NAME} pcap ssl crypto)
 endfunction(build_app)
 
