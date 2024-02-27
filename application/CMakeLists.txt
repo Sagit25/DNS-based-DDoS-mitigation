@@ -12,6 +12,7 @@ include_directories(include)
 function(build_app APP_NAME)
     add_executable(${APP_NAME} ${ARGS})
     target_link_libraries(${APP_NAME} pcap ssl crypto)
+endfunction(build_app)
 
 build_app(host src/host.c)
 build_app(auth src/auth.c)
