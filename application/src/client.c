@@ -60,7 +60,17 @@ int main(int argc, char* argv[]) {
     printf("Set address of target server\n");
 
     // Loop for sending TCP packets to host server
+    int normal_sleep_interval = 100000;
+    int ddos_sleep_interval = normal_sleep_interval / 10;
+    int before_ddos_cnt = 10000000 / normal_sleep_interval;
+    int tmpcnt = 0;
     while (1) {
+        if (tmpcnt >= before_ddos_cnt) {
+            usleep(ddos_sleep_interval);
+        } else {
+            tmpcnt++;
+            usleep(normal_sleep_interval);
+        }
         // Create client TCP socket
         int bind_option;
         client_tcp_sock = socket(PF_INET, SOCK_STREAM, 0); 
