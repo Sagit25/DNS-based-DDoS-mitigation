@@ -85,7 +85,7 @@ handle_ddos(cb_ptr buffer)
 int
 detect_ddos(void)
 {
-	const int DDOS_THRESHOLD = 100;
+	const int DDOS_THRESHOLD = 30;
 	struct circular_buffer buffer;
 	init_circular_buffer(&buffer);
 
