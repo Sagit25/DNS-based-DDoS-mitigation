@@ -5,6 +5,17 @@ pcap_thread(void* arg)
 {
 	pcap_thread_data *data = (pcap_thread_data*)arg;
 	while (data->keep_running) {
+		struct timeval current_time;
+		gettimeofday(&current_time, NULL);
+		while (!is_circular_buffer_empty(data->buffer)) {
+			long time_diff = current_time.tv_sec - get_circular_buffer_front(data->buffer).ts.tv_sec;
+
+			if (time_diff > 1) {
+				pop_circular_buffer(data->buffer);
+			} else {
+				break;
+			}
+		}
 		pcap_dispatch(data->handle, -1, packet_handler, (u_char*)data->buffer);
 		/*if(pcap_get_selectable_fd(data->handle) != -1 && !data->keep_running){
 			pcap_breakloop(data->handle);

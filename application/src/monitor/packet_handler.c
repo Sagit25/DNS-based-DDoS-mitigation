@@ -28,8 +28,10 @@ packet_handler(u_char *extra_user_data, const struct pcap_pkthdr *packet_header,
 	struct tcphdr *tcp_header = (struct tcphdr *)(packet + 14 + (ip_header->ip_hl << 2));
 
 	// clear buffer by removing old packets
+	struct timeval current_time;
+	gettimeofday(&current_time, NULL);
 	while (!is_circular_buffer_empty(buffer)) {
-		long time_diff = packet_header->ts.tv_sec - get_circular_buffer_front(buffer).ts.tv_sec;
+		long time_diff = current_time.tv_sec - get_circular_buffer_front(buffer).ts.tv_sec;
 
 		if (time_diff > 1) {
 			pop_circular_buffer(buffer);
@@ -48,7 +50,8 @@ packet_handler(u_char *extra_user_data, const struct pcap_pkthdr *packet_header,
 		inet_ntop(AF_INET, &(ip_header->ip_dst), destination_ip, INET_ADDRSTRLEN);
 		int packet_isp_id = determine_isp(source_ip);
 
-		new_packet_info.ts = packet_header->ts;
+		//new_packet_info.ts = packet_header->ts;
+		gettimeofday(&new_packet_info.ts, NULL);
 		new_packet_info.isp_id = packet_isp_id;
 
 		push_circular_buffer(buffer, new_packet_info);
