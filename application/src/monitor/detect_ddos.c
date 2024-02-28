@@ -64,7 +64,7 @@ set_difficulty(int isp_id, int current)
         printf("ISP%d current threshold: %d\n", isp_id, current_threshold);
         if (current_threshold == 0 || current_threshold > puzzle_threshold) {
                 printf("\tISP%d (%s) threshold changed: %d -> %d\n", isp_id, isp_dns_ip_str, current_threshold, puzzle_threshold);
-		int ret = syscall (459, inet_addr(isp_dns_ip_str), puzzle_threshold);
+		int ret = syscall(459, inet_addr(isp_dns_ip_str), puzzle_threshold);
                 if (ret != puzzle_threshold) {
                         printf("Set threshold error!\n");
                 } else {
