@@ -17,7 +17,7 @@ set_difficulty(int isp_id, int current)
 	while (tmp <= current) {
 		tmp *= 2;
 		rise++;
-		if (rise == 16) {
+		if (rise == 15) {
 			break;
 		}
 	}
