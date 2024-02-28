@@ -1,7 +1,7 @@
 #include <unistd.h>
 #include "tcp_syn_monitor.h"
 #include "monitor_log.h"
-#include "puzzle.h"
+//#include "puzzle.h"
 
 // Normal traffic of each ISP
 int ISP_NORMAL_TRAFFIC[ISP_NUMBER] = { 10, 10, 5, 10, 10, 10, 10, 10, 10, 10 };
@@ -115,8 +115,10 @@ detect_ddos(void)
 			//printf("DDOS detected\n");
                         if (DDOS_DETECTED == 0) {
                                 DDOS_DETECTED = 1;
-                                int pret = syscall(461, PZLTYPE_EXT);
-                                if (pret != PZLTYPE_EXT) {
+                                //int pret = syscall(461, PZLTYPE_EXT);
+                                int pret = syscall(461, 1);
+                                //if (pret != PZLTYPE_EXT) {
+                                if (pret != 1) {
                                         fprintf(stderr, "Set puzzle type error!\n");
                                 }
                         }
