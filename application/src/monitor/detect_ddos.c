@@ -1,10 +1,12 @@
 #include <unistd.h>
 #include "tcp_syn_monitor.h"
 #include "monitor_log.h"
+#include "puzzle.h"
 
 // Normal traffic of each ISP
 int ISP_NORMAL_TRAFFIC[ISP_NUMBER] = { 10, 10, 5, 10, 10, 10, 10, 10, 10, 10 };
 unsigned int DIFFICULTY[16] = {3000000, 1500000, 1000000, 500000, 210000, 110000, 55000, 30000, 20000, 6500, 3500, 2500, 2000, 1500, 1000, 500};
+int DDOS_DETECTED = 0;
 
 void
 set_difficulty(int isp_id, int current)
@@ -111,6 +113,13 @@ detect_ddos(void)
 	while (1) {
 		if (get_circular_buffer_size(&buffer) > DDOS_THRESHOLD) {
 			//printf("DDOS detected\n");
+                        if (DDOS_DETECTED == 0) {
+                                DDOS_DETECTED = 1;
+                                int pret = syscall(461, PZLTYPE_EXT);
+                                if (pret != PZLTYPE_EXT) {
+                                        fprintf(stderr, "Set puzzle type error!\n");
+                                }
+                        }
 			handle_ddos(&buffer);
 		}
 
