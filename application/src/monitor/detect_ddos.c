@@ -3,8 +3,8 @@
 #include "monitor_log.h"
 
 // Normal traffic of each ISP
-int ISP_NORMAL_TRAFFIC[ISP_NUMBER] = { 100, 100, 100, 100, 100, 100, 100, 100, 100, 100 };
-unsigned int DIFFICULTY[16] = {6000000, 3000000, 1500000, 1000000, 500000, 210000, 110000, 55000, 30000, 20000, 6500, 3500, 2500, 2000, 1500, 1000};
+int ISP_NORMAL_TRAFFIC[ISP_NUMBER] = { 10, 10, 5, 10, 10, 10, 10, 10, 10, 10 };
+unsigned int DIFFICULTY[16] = {3000000, 1500000, 1000000, 500000, 210000, 110000, 55000, 30000, 20000, 6500, 3500, 2500, 2000, 1500, 1000, 500};
 
 void
 set_difficulty(int isp_id, int current)
@@ -60,8 +60,11 @@ set_difficulty(int isp_id, int current)
 			isp_dns_ip_str = "";
 	}
 
-	if (puzzle_threshold < syscall(459, inet_addr(isp_dns_ip_str)))
+        unsigned int current_threshold = syscall(458, inet_addr(isp_dns_ip_str));
+        if (current_threshold == 0 || current_threshold > puzzle_threshold) {
+                printf("ISP%d threshold changed: %d -> %d\n", isp_id, current_threshold, puzzle_threshold);
 		syscall (459, inet_addr(isp_dns_ip_str), puzzle_threshold);
+        }
 }
 
 void
