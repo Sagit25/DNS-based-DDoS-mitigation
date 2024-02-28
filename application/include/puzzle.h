@@ -1,4 +1,6 @@
 /* Created by shyang */
+#ifndef PUZZLE_H
+#define PUZZLE_H
 
 #include <stdlib.h>
 #include <string.h>
@@ -48,3 +50,5 @@ unsigned int hash_ftn(unsigned int salt, unsigned int x) {
 
     return *((unsigned int*) output);
 }
+
+#endif
