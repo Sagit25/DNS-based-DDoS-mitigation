@@ -116,6 +116,9 @@ detect_ddos(void)
                         if (DDOS_DETECTED == 0) {
                                 DDOS_DETECTED = 1;
                                 //int pret = syscall(461, PZLTYPE_EXT);
+                                struct timeval ct;
+                                gettimeofday(&ct, NULL);
+                                printf("First DDoS detected at %ld.%03ld\n", ct.tv_sec, ct.tv_usec / (long)1000);
                                 int pret = syscall(461, 1);
                                 //if (pret != PZLTYPE_EXT) {
                                 if (pret != 1) {
