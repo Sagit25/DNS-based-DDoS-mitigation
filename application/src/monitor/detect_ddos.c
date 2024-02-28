@@ -61,9 +61,15 @@ set_difficulty(int isp_id, int current)
 	}
 
         unsigned int current_threshold = syscall(458, inet_addr(isp_dns_ip_str));
+        printf("ISP%d current threshold: %d\n", isp_id, current_threshold)
         if (current_threshold == 0 || current_threshold > puzzle_threshold) {
-                printf("ISP%d threshold changed: %d -> %d\n", isp_id, current_threshold, puzzle_threshold);
-		syscall (459, inet_addr(isp_dns_ip_str), puzzle_threshold);
+                printf("\tISP%d threshold changed: %d -> %d\n", isp_id, current_threshold, puzzle_threshold);
+		int ret = syscall (459, inet_addr(isp_dns_ip_str), puzzle_threshold);
+                if (ret != puzzle_threshold) {
+                        printf("Set threshold error!\n");
+                } else {
+                        printf("Set threshold success!\n");
+                }
         }
 }
 
@@ -104,8 +110,8 @@ detect_ddos(void)
 
 	while (1) {
 		if (get_circular_buffer_size(&buffer) > DDOS_THRESHOLD) {
-			printf("DDOS detected\n");
-			//handle_ddos(&buffer);
+			//printf("DDOS detected\n");
+			handle_ddos(&buffer);
 		}
 
 	}
