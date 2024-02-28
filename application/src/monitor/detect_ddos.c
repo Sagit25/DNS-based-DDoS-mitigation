@@ -60,7 +60,8 @@ set_difficulty(int isp_id, int current)
 			isp_dns_ip_str = "";
 	}
 
-	syscall(459, inet_addr(isp_dns_ip_str), puzzle_threshold);
+	if (puzzle_threshold < syscall(459, inet_addr(isp_dns_ip_str)))
+		syscall (459, inet_addr(isp_dns_ip_str), puzzle_threshold);
 }
 
 void
