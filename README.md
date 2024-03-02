@@ -2,7 +2,7 @@
 Puzzle-centric DDoS Traffic Control: A DNS-based Approach
 
 ``` Unicode
-DNS-based-DDoS-mitigation (expected)
+DNS-based-DDoS-mitigation
   │ 
   ├── application
   │    │     
